@@ -1,3 +1,7 @@
+function uniqid() {
+    var id = ""+ parseInt(Math.random() * 100) + "-" + parseInt(Math.random() * 10000) + "-" + parseInt(Math.random() * 100);
+    return id;
+}
 function Agent () {
 	this.typeId = "agent";
 	this.x = 0;
@@ -12,6 +16,8 @@ function Agent () {
 	
 	this.dropped = null;	
 	this.dead = false;
+
+    this.id = uniqid();
 }
 
 Agent.prototype.update = function(dt) {

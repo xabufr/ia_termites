@@ -14,7 +14,7 @@ function WoodHeap() {
 }
 
 WoodHeap.prototype.updateRadius = function() {
-	this.boundingRadius = this.woodCount;
+	this.boundingRadius = Math.sqrt(this.woodCount);
 };
 
 WoodHeap.prototype.update = function(dt) {
@@ -39,6 +39,8 @@ WoodHeap.prototype.draw = function(context) {
 	context.arc(this.x,this.y,this.boundingRadius,0,2*Math.PI);
 	context.fill();
 	context.stroke();
+    context.fillStyle = "blue";
+    context.fillText(Math.round(this.woodCount), this.x, this.y);
 };
 
 WoodHeap.prototype.processCollision = function(collidedAgent) {
