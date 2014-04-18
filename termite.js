@@ -16,6 +16,8 @@ function Termite() {
 	this.directionDelay = 0;
 	this.speed = 500;
 	this.updateRandomDirection();
+
+    this.nid = null;
 }
 
 Termite.prototype.updateRandomDirection = function(dt) {
@@ -87,22 +89,54 @@ Termite.prototype.processCollision = function(collidedAgent) {
 	}
 };
 
+function negociateNid(perceivedAgent) {
+    var otherNid = perceivedAgent.nid;
+    if (otherNid.id != this.nid.id) {
+        if (otherNid.termites.length >= this.nid.length) {
+            this.nid.id = otherNid.id;
+            this.nid.termites = [this.id];
+            this.nid.position.x = otherNid.position.x;
+            this.nid.position.y = otherNid.position.y;
+            for (var idx in otherNid.termites) {
+                this.nid.termites.push(otherNid.termites[idx]);
+            }
+        }
+    } else {
+        var otherTermites = perceivedAgent.nid.termites;
+        for (var idx in  otherTermites) {
+            var t_id = otherTermites[idx];
+            if (this.nid.termites.indexOf(t_id) !== -1) {
+                this.nid.termites.push(t_id);
+            }
+        }
+    }
+}
 Termite.prototype.processPerception = function(perceivedAgent) {
-	if(perceivedAgent.typeId == "wood_heap") {
+    if(perceivedAgent.typeId == "wood_heap") {
 		this.heapInfos[perceivedAgent.identifier] = {
 			"x":perceivedAgent.x,
 			"y":perceivedAgent.y,
 			"count": perceivedAgent.woodCount,
 			"date" : new Date()
 		};
+        if(this.nid === null) {
+            this.nid = {
+                id: perceivedAgent.id,
+                termites: [this.id],
+                position: {
+                    x: perceivedAgent.x,
+                    y: perceivedAgent.y
+                }
+            };
+        }
 	} else if(perceivedAgent.typeId == "termite") {
-		for(identifier in perceivedAgent.heapInfos) {
+		for(var identifier in perceivedAgent.heapInfos) {
 			var heapInfo = perceivedAgent.heapInfos[identifier];
 			if(this.heapInfos[identifier] == null) {
 				this.heapInfos[identifier] = heapInfo;
 			} else if(this.heapInfos[identifier].date < heapInfo.date)
-				this.heapInfos[identifier] = heapInfo;				
-			
+				this.heapInfos[identifier] = heapInfo;
 		}
-	}
+        negociateNid.call(this, perceivedAgent);
+    }
 };
