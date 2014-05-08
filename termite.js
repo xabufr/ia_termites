@@ -13,6 +13,7 @@ function Termite() {
 	this.contactTypes = ["wood_heap"];
 
 	this.heapInfos = [];
+    this.walls = {};
 	this.directionDelay = 0;
 	this.speed = 500;
 	this.updateRandomDirection();
@@ -124,6 +125,13 @@ function negociateNid(perceivedAgent) {
         }
     }
 }
+function getWallFromOther(other) {
+    for(var wallId in other.walls) {
+        if(! wallId in this.walls) {
+            this.walls[wallId] = other.walls[wallId];
+        }
+    }
+}
 Termite.prototype.processPerception = function(perceivedAgent) {
     if(perceivedAgent.typeId == "wood_heap") {
 		this.heapInfos[perceivedAgent.identifier] = {
@@ -151,5 +159,17 @@ Termite.prototype.processPerception = function(perceivedAgent) {
 				this.heapInfos[identifier] = heapInfo;
 		}
         negociateNid.call(this, perceivedAgent);
+        getWallFromOther.call(this, perceivedAgent);
+    } else if(perceivedAgent.typeId == "wall") {
+        if(!perceivedAgent.id in this.walls) {
+            var wallInfos = {
+                id: perceivedAgent.id,
+                x: perceivedAgent.position.x,
+                y: perceivedAgent.position.y,
+                width: perceivedAgent.boundingWidth,
+                height: perceivedAgent.boundingHeight
+            };
+            this.walls[perceivedAgent.id] = wallInfos;
+        }
     }
 };
