@@ -90,16 +90,29 @@ Termite.prototype.processCollision = function(collidedAgent) {
 };
 
 function negociateNid(perceivedAgent) {
+    function setTermiteNid(otherNid) {
+        this.nid.id = otherNid.id;
+        this.nid.termites = [this.id];
+        this.nid.position.x = otherNid.position.x;
+        this.nid.position.y = otherNid.position.y;
+        for (var idx in otherNid.termites) {
+            this.nid.termites.push(otherNid.termites[idx]);
+        }
+    }
     var otherNid = perceivedAgent.nid;
+    if(otherNid !== null && this.nid === null) {
+        this.nid = {};
+        setTermiteNid.call(this, otherNid);
+        return;
+    }
+    else if(otherNid === null || this.nid === null) {
+        return;
+    }
+
+
     if (otherNid.id != this.nid.id) {
         if (otherNid.termites.length >= this.nid.length) {
-            this.nid.id = otherNid.id;
-            this.nid.termites = [this.id];
-            this.nid.position.x = otherNid.position.x;
-            this.nid.position.y = otherNid.position.y;
-            for (var idx in otherNid.termites) {
-                this.nid.termites.push(otherNid.termites[idx]);
-            }
+            setTermiteNid.call(this, otherNid);
         }
     } else {
         var otherTermites = perceivedAgent.nid.termites;
