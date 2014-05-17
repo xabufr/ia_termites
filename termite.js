@@ -43,7 +43,7 @@ Termite.prototype.update = function(dt) {
 					} else if(!this.hasWood) {
 						if(targetHeap == null || heapInfo.count < targetHeap.count) {
 							targetHeap  = heapInfo;
-						}			
+						}
 					}
 				}
 			}
@@ -83,26 +83,27 @@ Termite.prototype.processCollision = function(collidedAgent) {
 			collidedAgent.takeWood();
 			this.hasWood = true;
 		}
-		//this.changeDirection();		
+		//this.changeDirection();
 	}
 };
 
 Termite.prototype.processPerception = function(perceivedAgent) {
-	if(perceivedAgent.typeId == "wood_heap") {
-		this.heapInfos[perceivedAgent.identifier] = {
-			"x":perceivedAgent.x,
-			"y":perceivedAgent.y,
-			"count": perceivedAgent.woodCount,
-			"date" : new Date()
-		};
-	} else if(perceivedAgent.typeId == "termite") {
-		for(identifier in perceivedAgent.heapInfos) {
-			var heapInfo = perceivedAgent.heapInfos[identifier];
-			if(this.heapInfos[identifier] == null) {
-				this.heapInfos[identifier] = heapInfo;
-			} else if(this.heapInfos[identifier].date < heapInfo.date)
-				this.heapInfos[identifier] = heapInfo;				
-			
-		}
-	}
-};
+    if (perceivedAgent.typeId == "wood_heap") {
+        this.heapInfos[perceivedAgent.identifier] = {
+            "x": perceivedAgent.x,
+            "y": perceivedAgent.y,
+            "count": perceivedAgent.woodCount,
+            "date": new Date()
+        };
+    } else if (perceivedAgent.typeId == "termite") {
+        this.recentWoodStockInformation(perceivedAgent);
+        for (identifier in perceivedAgent.heapInfos) {
+            var heapInfo = perceivedAgent.heapInfos[identifier];
+            if (this.heapInfos[identifier] == null) {
+                this.heapInfos[identifier] = heapInfo;
+            } else if (this.heapInfos[identifier].date < heapInfo.date)
+                this.heapInfos[identifier] = heapInfo;
+
+        }
+    }
+}
