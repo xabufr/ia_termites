@@ -13,9 +13,12 @@ function Termite() {
 	this.contactTypes = ["wood_heap"];
 
 	this.heapInfos = [];
+    this.walls = {};
 	this.directionDelay = 0;
 	this.speed = 500;
 	this.updateRandomDirection();
+
+    this.nid = null;
 }
 
 Termite.prototype.updateRandomDirection = function(dt) {
@@ -87,23 +90,86 @@ Termite.prototype.processCollision = function(collidedAgent) {
 	}
 };
 
-Termite.prototype.processPerception = function(perceivedAgent) {
-    if (perceivedAgent.typeId == "wood_heap") {
-        this.heapInfos[perceivedAgent.identifier] = {
-            "x": perceivedAgent.x,
-            "y": perceivedAgent.y,
-            "count": perceivedAgent.woodCount,
-            "date": new Date()
-        };
-    } else if (perceivedAgent.typeId == "termite") {
-        this.recentWoodStockInformation(perceivedAgent);
-        for (identifier in perceivedAgent.heapInfos) {
-            var heapInfo = perceivedAgent.heapInfos[identifier];
-            if (this.heapInfos[identifier] == null) {
-                this.heapInfos[identifier] = heapInfo;
-            } else if (this.heapInfos[identifier].date < heapInfo.date)
-                this.heapInfos[identifier] = heapInfo;
+function negociateNid(perceivedAgent) {
+    function setTermiteNid(otherNid) {
+        this.nid.id = otherNid.id;
+        this.nid.termites = [this.id];
+        this.nid.position.x = otherNid.position.x;
+        this.nid.position.y = otherNid.position.y;
+        for (var idx in otherNid.termites) {
+            this.nid.termites.push(otherNid.termites[idx]);
+        }
+    }
+    var otherNid = perceivedAgent.nid;
+    if(otherNid !== null && this.nid === null) {
+        this.nid = {};
+        setTermiteNid.call(this, otherNid);
+        return;
+    }
+    else if(otherNid === null || this.nid === null) {
+        return;
+    }
 
+
+    if (otherNid.id != this.nid.id) {
+        if (otherNid.termites.length >= this.nid.length) {
+            setTermiteNid.call(this, otherNid);
+        }
+    } else {
+        var otherTermites = perceivedAgent.nid.termites;
+        for (var idx in  otherTermites) {
+            var t_id = otherTermites[idx];
+            if (this.nid.termites.indexOf(t_id) !== -1) {
+                this.nid.termites.push(t_id);
+            }
         }
     }
 }
+function getWallFromOther(other) {
+    for(var wallId in other.walls) {
+        if(! wallId in this.walls) {
+            this.walls[wallId] = other.walls[wallId];
+        }
+    }
+}
+Termite.prototype.processPerception = function(perceivedAgent) {
+    if(perceivedAgent.typeId == "wood_heap") {
+		this.heapInfos[perceivedAgent.identifier] = {
+			"x":perceivedAgent.x,
+			"y":perceivedAgent.y,
+			"count": perceivedAgent.woodCount,
+			"date" : new Date()
+		};
+        if(this.nid === null) {
+            this.nid = {
+                id: perceivedAgent.id,
+                termites: [this.id],
+                position: {
+                    x: perceivedAgent.x,
+                    y: perceivedAgent.y
+                }
+            };
+        }
+	} else if(perceivedAgent.typeId == "termite") {
+		for(var identifier in perceivedAgent.heapInfos) {
+			var heapInfo = perceivedAgent.heapInfos[identifier];
+			if(this.heapInfos[identifier] == null) {
+				this.heapInfos[identifier] = heapInfo;
+			} else if(this.heapInfos[identifier].date < heapInfo.date)
+				this.heapInfos[identifier] = heapInfo;
+		}
+        negociateNid.call(this, perceivedAgent);
+        getWallFromOther.call(this, perceivedAgent);
+    } else if(perceivedAgent.typeId == "wall") {
+        if(!perceivedAgent.id in this.walls) {
+            var wallInfos = {
+                id: perceivedAgent.id,
+                x: perceivedAgent.position.x,
+                y: perceivedAgent.position.y,
+                width: perceivedAgent.boundingWidth,
+                height: perceivedAgent.boundingHeight
+            };
+            this.walls[perceivedAgent.id] = wallInfos;
+        }
+    }
+};
