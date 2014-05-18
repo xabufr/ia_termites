@@ -57,7 +57,10 @@
 		//world.draw(canvasContext);
 
 		for(var i = 0; i < 100; i ++) {
-			var termite = new Termite();
+			var termite = new Termite(canvasElement.width, canvasElement.height);
+            if(i == 0) {
+                termite.drawAStar = true;
+            }
 			world.addAgent(termite);
 			termite.moveTo(	canvasElement.width * Math.random(), 
 							canvasElement.height * Math.random());
