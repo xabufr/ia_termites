@@ -31,13 +31,66 @@ function Rectangle(x, y, width, height, full) {
     this.full = full;
 
     this.split = function (otherRect) {
-        return [this];
+        var splitted = this.horizontalCut(otherRect.position.y);
+        var tmpSplit = [];
+        for (var i in splitted) {
+            tmpSplit = tmpSplit.concat(splitted[i].horizontalCut(otherRect.position.y + otherRect.dimension.y));
+        }
+        splitted = tmpSplit;
+        tmpSplit = [];
+        for (var i in splitted) {
+            tmpSplit = tmpSplit.concat(splitted[i].verticalCut(otherRect.position.x + otherRect.dimension.x));
+        }
+        splitted = tmpSplit;
+        tmpSplit = [];
+        for (var i in splitted) {
+            tmpSplit = tmpSplit.concat(splitted[i].verticalCut(otherRect.position.x));
+        }
+        splitted = tmpSplit;
+        for (var i in splitted) {
+            if (otherRect.contains(splitted[i])) {
+                splitted[i].full = otherRect.full;
+            }
+        }
+        return splitted;
     }
 
-    function contains(other) {
+    this.horizontalCut = function (y) {
+        if (this.position.y < y && this.position.y + this.dimension.y > y) {
+            var height = this.dimension.y - ((this.dimension.y + this.position.y) - y);
+            return [new Rectangle(this.position.x, this.position.y, this.dimension.x, height, this.full),
+                new Rectangle(this.position.x, this.position.y + height, this.dimension.x, this.dimension.y - height, this.full)];
+        } else {
+            return [new Rectangle(this.position.x, this.position.y, this.dimension.x, this.dimension.y, this.full)];
+        }
+    }
+    this.verticalCut = function (x) {
+        if (this.position.x < x && this.position.x + this.dimension.x > x) {
+            var height = this.dimension.x - ((this.dimension.x + this.position.x) - x);
+            return [new Rectangle(this.position.x, this.position.y, height, this.dimension.y, this.full),
+                new Rectangle(this.position.x + height, this.position.y, this.dimension.x - height, this.dimension.y, this.full)];
+        } else {
+            return [new Rectangle(this.position.x, this.position.y, this.dimension.x, this.dimension.y, this.full)];
+        }
+    }
+
+    this.contains = function (other) {
         return this.position.x <= other.position.x && this.position.x + this.dimension.x >= other.position.x &&
             this.position.y <= other.position.y && this.position.y + this.dimension.y >= other.position.y;
     }
+
+    this.equals = function (other) {
+        function makeNear(sensibility) {
+            return function (a, b) {
+                return Math.abs(a - b) < sensibility;
+            }
+        }
+        var near = makeNear(10);
+        return near(this.position.x, other.position.x) &&
+            near(this.position.y, other.position.y) &&
+            near(this.dimension.x, other.dimension.x) &&
+            near(this.dimension.y, other.dimension.y);
+    };
 
     this.draw = function (context) {
         if (this.full) {
@@ -45,9 +98,11 @@ function Rectangle(x, y, width, height, full) {
         } else {
             context.fillStyle = "rgba(128, 128, 128, 0.25)";
         }
+        context.strokeStyle = "#000";
         context.beginPath();
         context.rect(this.position.x, this.position.y, this.dimension.x, this.dimension.y);
         context.fill();
+        context.stroke();
     }
 }
 
@@ -98,8 +153,8 @@ Termite.prototype.update = function (dt) {
 Termite.prototype.draw = function (context) {
     context.fillStyle = this.hasWood ? "#f00" : "#000";
     context.strokeStyle = "#000";
-    if(this.drawAStar)
-    context.fillStyle = "rgba(0, 255, 0, 1)";
+    if (this.drawAStar)
+        context.fillStyle = "rgba(0, 255, 0, 1)";
     context.beginPath();
     context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
     context.fill();
@@ -203,8 +258,8 @@ Termite.prototype.processPerception = function (perceivedAgent) {
         if (!(perceivedAgent.id in this.walls)) {
             var wallInfos = {
                 id: perceivedAgent.id,
-                x: perceivedAgent.x,
-                y: perceivedAgent.y,
+                x: perceivedAgent.x - perceivedAgent.boundingWidth * 0.5,
+                y: perceivedAgent.y - perceivedAgent.boundingHeight * 0.5,
                 width: perceivedAgent.boundingWidth,
                 height: perceivedAgent.boundingHeight
             };
@@ -213,13 +268,13 @@ Termite.prototype.processPerception = function (perceivedAgent) {
     }
 };
 
-Termite.prototype.addWall = function(wall) {
+Termite.prototype.addWall = function (wall) {
     this.walls[wall.id] = wall;
     var newRect = new Rectangle(wall.x, wall.y, wall.width, wall.height, true);
     var newAStar = [];
-    for(var i in this.astar_grid) {
+    for (var i in this.astar_grid) {
         var newRectangles = this.astar_grid[i].split(newRect);
-        for(var j in newRectangles) {
+        for (var j in newRectangles) {
             newAStar.push(newRectangles[j]);
         }
     }
