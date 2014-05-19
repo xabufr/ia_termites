@@ -27,7 +27,7 @@ function Termite(world_width, world_height) {
     this.worldHeight = world_height;
 }
 
-Termite.prototype.updateRandomDirection = function (dt) {
+Termite.prototype.updateRandomDirection = function () {
     this.direction = new Vect(Math.random() * 2 - 1, Math.random() * 2 - 1);
     this.direction.normalize(1);
 };
@@ -40,7 +40,7 @@ Termite.prototype.update = function (dt) {
     this.directionDelay -= dt;
     if (this.directionDelay <= 0) {
         var targetHeap = null;
-        var searchTargetHeap = (Math.random() < 0.9)
+        var searchTargetHeap = (Math.random() < 0.9);
         if (searchTargetHeap) {
             for (identifier in this.heapInfos) {
                 var heapInfo = this.heapInfos[identifier];
@@ -169,7 +169,7 @@ Termite.prototype.processWallPerception = function (perceivedAgent) {
         };
         this.addWall(wallInfos);
     }
-}
+};
 Termite.prototype.processPerception = function (perceivedAgent) {
     if (perceivedAgent.typeId == "wood_heap") {
         this.heapInfos[perceivedAgent.identifier] = {
@@ -206,21 +206,21 @@ Termite.prototype.processPerception = function (perceivedAgent) {
 Termite.prototype.addWall = function (wall) {
     this.walls[wall.id] = wall;
     this.astar_grid = calculateAStarGrid(this.walls, this.worldWidth, this.worldHeight);
-}
+};
 
-function getArrayNoDuplicate(array) {
-    var values = {};
-    var noDuplicates = [];
-    for(var index in array) {
-        var value = array[index];
-        if(!(value in values)) {
-            noDuplicates.push(value);
-            values[value] = 2;
-        }
-    }
-    return noDuplicates;
-}
 function calculateAStarGrid(walls, world_width, world_height) {
+    function getArrayNoDuplicate(array) {
+        var values = {};
+        var noDuplicates = [];
+        for(var index in array) {
+            var value = array[index];
+            if(!(value in values)) {
+                noDuplicates.push(value);
+                values[value] = 2;
+            }
+        }
+        return noDuplicates;
+    }
     function findAllCoordsSorted() {
         var x = [0, world_width];
         var y = [0, world_height];
@@ -257,27 +257,26 @@ function calculateAStarGrid(walls, world_width, world_height) {
         }
         return grid;
     }
+    function makeRect(x, y, width, height) {
+        return {
+            x: x,
+            y: y,
+            width: width,
+            height: height
+        };
+    }
+    function isRectFull(rect, walls) {
+        var x = rect.x + rect.width * 0.5;
+        var y = rect.y + rect.height * 0.5;
+        for(var i in walls) {
+            var wall = walls[i];
+            if(x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     var sortedCoords = findAllCoordsSorted();
     return makeGridFromSortedCoords(sortedCoords.x, sortedCoords.y);
-}
-function makeRect(x, y, width, height) {
-    return {
-        x: x,
-        y: y,
-        width: width,
-        height: height
-    };
-}
-
-function isRectFull(rect, walls) {
-    var x = rect.x + rect.width * 0.5;
-    var y = rect.y + rect.height * 0.5;
-    for(var i in walls) {
-        var wall = walls[i];
-        if(x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
-            return true;
-        }
-    }
-    return false;
 }
