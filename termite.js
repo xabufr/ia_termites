@@ -25,6 +25,9 @@ function Termite(world_width, world_height) {
     this.astar_grid = null;
     this.worldWidth = world_width;
     this.worldHeight = world_height;
+
+    this.destination = null;
+    this.astarPath = null;
 }
 
 Termite.prototype.updateRandomDirection = function () {
@@ -81,23 +84,23 @@ Termite.prototype.draw = function (context) {
     context.fill();
     context.stroke();
     if (this.drawAStar) {
-        for(var i in this.astar_grid) {
+        for (var i in this.astar_grid) {
             var row = this.astar_grid[i];
-            for(var j in row) {
+            for (var j in row) {
                 var rect = row[j];
                 context.beginPath();
                 context.fillStyle = "rgba(255, 0, 0, 0.15)";
                 context.rect(rect.x, rect.y, rect.width, rect.height);
-                if(rect.full) {
+                if (rect.full) {
                     context.fill();
                 }
                 context.stroke();
                 context.fillStyle = "blue";
-                context.fillText(i +" " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
+                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
             }
         }
-        var paths = findPath({x: this.astar_grid.length - 1, y: this.astar_grid[0].length - 1}, {x: 0, y: 0}, this.astar_grid, this.boundingRadius*2);
-        for(var i in paths) {
+        var paths = findPath({x: this.astar_grid.length - 1, y: this.astar_grid[0].length - 1}, {x: 0, y: 0}, this.astar_grid, this.boundingRadius * 2);
+        for (var i in paths) {
             var path = paths[i];
             var rect = path.node;
             context.beginPath();
@@ -108,6 +111,16 @@ Termite.prototype.draw = function (context) {
         }
     }
 };
+
+Termite.prototype.goto = function (x, y) {
+    this.destination = {
+        x: x,
+        y: y
+    };
+    var gridStart = worldToGrid(this.x, this.y, this.astar_grid);
+    var gridGoal = worldToGrid(x, y, this.astar_grid);
+    this.astarPath = findPath(gridStart, gridGoal, this.astar_grid, this.boundingRadius);
+}
 
 Termite.prototype.processCollision = function (collidedAgent) {
     if (collidedAgent == null) {
@@ -126,6 +139,19 @@ Termite.prototype.processCollision = function (collidedAgent) {
         this.processWallPerception(collidedAgent);
     }
 };
+
+function worldToGrid(x, y, grid) {
+    for (var x = 0; x < grid.length; ++x) {
+        for (var y = 0; y < grid[x].length; ++x) {
+            if (isPointInRect(x, y, grid[x][y])) {
+                return {
+                    x: x,
+                    y: y
+                }
+            }
+        }
+    }
+}
 
 function negociateNid(perceivedAgent) {
     function setTermiteNid(otherNid) {
@@ -168,6 +194,12 @@ function getWallFromOther(other) {
         if (!(wallId in this.walls)) {
             this.addWall(other.walls[wallId]);
         }
+    }
+}
+
+function isPointInRect(x, y, rect) {
+    if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
+        return true;
     }
 }
 Termite.prototype.processWallPerception = function (perceivedAgent) {
@@ -224,15 +256,16 @@ function calculateAStarGrid(walls, world_width, world_height) {
     function getArrayNoDuplicate(array) {
         var values = {};
         var noDuplicates = [];
-        for(var index in array) {
+        for (var index in array) {
             var value = array[index];
-            if(!(value in values)) {
+            if (!(value in values)) {
                 noDuplicates.push(value);
                 values[value] = 2;
             }
         }
         return noDuplicates;
     }
+
     function findAllCoordsSorted() {
         var x = [0, world_width];
         var y = [0, world_height];
@@ -252,6 +285,7 @@ function calculateAStarGrid(walls, world_width, world_height) {
 
         return {x: x, y: y};
     }
+
     function makeGridFromSortedCoords(x, y) {
         var grid = [];
         for (var index_x = 0; index_x < x.length - 1; ++index_x) {
@@ -269,6 +303,7 @@ function calculateAStarGrid(walls, world_width, world_height) {
         }
         return grid;
     }
+
     function makeRect(x, y, width, height) {
         return {
             x: x,
@@ -277,12 +312,13 @@ function calculateAStarGrid(walls, world_width, world_height) {
             height: height
         };
     }
+
     function isRectFull(rect, walls) {
         var x = rect.x + rect.width * 0.5;
         var y = rect.y + rect.height * 0.5;
-        for(var i in walls) {
+        for (var i in walls) {
             var wall = walls[i];
-            if(x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
+            if (x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
                 return true;
             }
         }
@@ -295,11 +331,13 @@ function calculateAStarGrid(walls, world_width, world_height) {
 
 function findPath(from, to, grid, minCaseSize) {
     function estimateCost(from, to) {
-        return Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
+        return Math.sqrt(Math.pow(to.x - from.x, 2) + Math.pow(to.y - from.y, 2));
     }
+
     function distanceBetween(from, to) {
         return estimateCost(from, to);
     }
+
     var closeSet = [];
     var openSet = [];
     var cameFrom = [];
@@ -310,27 +348,29 @@ function findPath(from, to, grid, minCaseSize) {
 
     function makeGetUnique(container) {
         return function (node) {
-            for(var i in container) {
+            for (var i in container) {
                 var curr = container[i];
-                if(curr.key == node) {
+                if (curr.key == node) {
                     return curr.value;
                 }
             }
             return null;
         }
     }
+
     function makeSetUnique(container) {
-        return function(key, value) {
-        for(var i in container) {
-            var curr = container[i];
-            if(curr.key === key) {
-                curr.value = value;
-                return;
+        return function (key, value) {
+            for (var i in container) {
+                var curr = container[i];
+                if (curr.key === key) {
+                    curr.value = value;
+                    return;
+                }
             }
+            container.push({key: key, value: value});
         }
-        container.push({key: key, value: value});
     }
-    }
+
     var getFScore = makeGetUnique(fScore);
     var setFScore = makeSetUnique(fScore);
     var getGScore = makeGetUnique(gScore);
@@ -346,10 +386,10 @@ function findPath(from, to, grid, minCaseSize) {
     function lowestFScoreNode() {
         var score = 99999999;
         var lowest = null;
-        for(var index in openSet) {
+        for (var index in openSet) {
             var currentNode = openSet[index];
             var currentScore = getFScore(currentNode);
-            if(currentScore !== null && currentScore < score) {
+            if (currentScore !== null && currentScore < score) {
                 score = currentScore;
                 lowest = currentNode;
             }
@@ -358,9 +398,9 @@ function findPath(from, to, grid, minCaseSize) {
     }
 
     function makeNode(x, y) {
-        for(var i in nodesCache) {
+        for (var i in nodesCache) {
             var node = nodesCache[i];
-            if(node.x == x && node.y == y) {
+            if (node.x == x && node.y == y) {
                 return node;
             }
         }
@@ -372,9 +412,10 @@ function findPath(from, to, grid, minCaseSize) {
         nodesCache.push(newNode);
         return newNode;
     }
+
     function retrievePath(came_from, current_node) {
         var node = getCameFrom(current_node);
-        if(node !== null) {
+        if (node !== null) {
             var previous = retrievePath(came_from, node);
             return [current_node].concat(previous);
         } else {
@@ -382,23 +423,25 @@ function findPath(from, to, grid, minCaseSize) {
         }
     }
 
-    function findNeighbor (node) {
+    function findNeighbor(node) {
         var indices = [];
+
         function inGrid(x, y) {
             return x >= 0 && y >= 0 && x < grid.length && y < grid[x].length;
         }
+
         function canAdd(x, y) {
-            if(inGrid(x, y)) {
+            if (inGrid(x, y)) {
                 var isEmpty = !grid[x][y].full;
-                if(isEmpty) {
+                if (isEmpty) {
                     //UP - DOWN
-                    if(node.x == x) {
-                        if(grid[x][y].width < minCaseSize) {
+                    if (node.x == x) {
+                        if (grid[x][y].width < minCaseSize) {
                             isEmpty = false;
                         }
                         //LEFT - RIGHT
                     } else {
-                        if(grid[x][y].height < minCaseSize) {
+                        if (grid[x][y].height < minCaseSize) {
                             isEmpty = false;
                         }
                     }
@@ -407,15 +450,29 @@ function findPath(from, to, grid, minCaseSize) {
             }
             return false;
         }
+
         function processNeighbor(x, y) {
-            if(canAdd(x, y)) {
+            if (canAdd(x, y)) {
                 indices.push(makeNode(x, y));
+                return true;
             }
+            return false;
         }
-        processNeighbor(node.x, node.y - 1);
-        processNeighbor(node.x - 1, node.y);
-        processNeighbor(node.x + 1, node.y);
-        processNeighbor(node.x, node.y + 1);
+
+        var top = processNeighbor(node.x, node.y - 1);
+        var left = processNeighbor(node.x - 1, node.y);
+        var right = processNeighbor(node.x + 1, node.y);
+        var bottom = processNeighbor(node.x, node.y + 1);
+
+        if(top && left) {
+            processNeighbor(node.x - 1, node.y - 1);
+        } if(left && bottom) {
+            processNeighbor(node.x - 1, node.y + 1);
+        } if(top && right) {
+            processNeighbor(node.x + 1, node.y - 1);
+        } if(bottom && right) {
+            processNeighbor(node.x + 1, node.y + 1);
+        }
 
         return indices;
     }
@@ -425,27 +482,27 @@ function findPath(from, to, grid, minCaseSize) {
     }
 
 
-    while(openSet.length > 0) {
+    while (openSet.length > 0) {
         var current = lowestFScoreNode();
-        if(nodeEquals(current, to)) {
+        if (nodeEquals(current, to)) {
             return retrievePath(cameFrom, makeNode(current.x, current.y));
         }
         openSet.splice(openSet.indexOf(current), 1);
         closeSet.push(current);
 
         var neighbors = findNeighbor(current);
-        for(var index in neighbors) {
+        for (var index in neighbors) {
             var neighbor = neighbors[index];
-            if(closeSet.indexOf(neighbor) != -1) {
+            if (closeSet.indexOf(neighbor) != -1) {
                 continue;
             }
 
-            var tentativeGScore = getGScore(current) +  distanceBetween(current, neighbor);
-            if(openSet.indexOf(neighbor) === -1 || tentativeGScore < getGScore(neighbor)) {
+            var tentativeGScore = getGScore(current) + distanceBetween(current, neighbor);
+            if (openSet.indexOf(neighbor) === -1 || tentativeGScore < getGScore(neighbor)) {
                 setCameFrom(neighbor, current);
                 setGScore(neighbor, tentativeGScore);
                 setFScore(neighbor, tentativeGScore + distanceBetween(neighbor, to));
-                if(openSet.indexOf(neighbor) === -1) {
+                if (openSet.indexOf(neighbor) === -1) {
                     openSet.push(neighbor);
                 }
             }
