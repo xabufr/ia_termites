@@ -96,7 +96,7 @@ Termite.prototype.draw = function (context) {
                 context.fillText(i +" " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
             }
         }
-        var paths = findPath({x: this.astar_grid.length - 1, y: this.astar_grid[0].length - 1}, {x: 0, y: 0}, this.astar_grid);
+        var paths = findPath({x: this.astar_grid.length - 1, y: this.astar_grid[0].length - 1}, {x: 0, y: 0}, this.astar_grid, this.boundingRadius*2);
         for(var i in paths) {
             var path = paths[i];
             var rect = path.node;
@@ -293,7 +293,7 @@ function calculateAStarGrid(walls, world_width, world_height) {
     return makeGridFromSortedCoords(sortedCoords.x, sortedCoords.y);
 }
 
-function findPath(from, to, grid) {
+function findPath(from, to, grid, minCaseSize) {
     function estimateCost(from, to) {
         return Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
     }
@@ -389,7 +389,21 @@ function findPath(from, to, grid) {
         }
         function canAdd(x, y) {
             if(inGrid(x, y)) {
-                return !grid[x][y].full;
+                var isEmpty = !grid[x][y].full;
+                if(isEmpty) {
+                    //UP - DOWN
+                    if(node.x == x) {
+                        if(grid[x][y].width < minCaseSize) {
+                            isEmpty = false;
+                        }
+                        //LEFT - RIGHT
+                    } else {
+                        if(grid[x][y].height < minCaseSize) {
+                            isEmpty = false;
+                        }
+                    }
+                }
+                return isEmpty;
             }
             return false;
         }
@@ -439,4 +453,3 @@ function findPath(from, to, grid) {
     }
     return false;
 }
-

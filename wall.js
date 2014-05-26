@@ -23,7 +23,5 @@ Wall.prototype.draw = function(context) {
 	context.beginPath();
 	context.rect(this.x - this.boundingWidth/2, this.y - this.boundingHeight/2, this.boundingWidth, this.boundingHeight);
 	context.fill();
-    context.lineWidth = 5;
 	context.stroke();
-    context.lineWidth = 1;
 };
