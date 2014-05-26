@@ -65,7 +65,8 @@
 			termite.moveTo(	canvasElement.width * Math.random(), 
 							canvasElement.height * Math.random());
 		}
-		
+
+        world.correctWalls();
 		
 		var fps = 60;
 		mainLoop = setInterval(update, 1000 / fps); 

@@ -92,7 +92,19 @@ Termite.prototype.draw = function (context) {
                     context.fill();
                 }
                 context.stroke();
+                context.fillStyle = "blue";
+                context.fillText(i +" " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
             }
+        }
+        var paths = findPath({x: this.astar_grid.length - 1, y: this.astar_grid[0].length - 1}, {x: 0, y: 0}, this.astar_grid);
+        for(var i in paths) {
+            var path = paths[i];
+            var rect = path.node;
+            context.beginPath();
+            context.fillStyle = "rgba(0, 255, 0, 0.15)";
+            context.rect(rect.x, rect.y, rect.width, rect.height);
+            context.fill();
+            context.beginPath();
         }
     }
 };
@@ -280,3 +292,151 @@ function calculateAStarGrid(walls, world_width, world_height) {
     var sortedCoords = findAllCoordsSorted();
     return makeGridFromSortedCoords(sortedCoords.x, sortedCoords.y);
 }
+
+function findPath(from, to, grid) {
+    function estimateCost(from, to) {
+        return Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
+    }
+    function distanceBetween(from, to) {
+        return estimateCost(from, to);
+    }
+    var closeSet = [];
+    var openSet = [];
+    var cameFrom = [];
+    var fScore = [];
+    var gScore = [];
+    var nodesCache = [];
+    var beginNode = makeNode(from.x, from.y);
+
+    function makeGetUnique(container) {
+        return function (node) {
+            for(var i in container) {
+                var curr = container[i];
+                if(curr.key == node) {
+                    return curr.value;
+                }
+            }
+            return null;
+        }
+    }
+    function makeSetUnique(container) {
+        return function(key, value) {
+        for(var i in container) {
+            var curr = container[i];
+            if(curr.key === key) {
+                curr.value = value;
+                return;
+            }
+        }
+        container.push({key: key, value: value});
+    }
+    }
+    var getFScore = makeGetUnique(fScore);
+    var setFScore = makeSetUnique(fScore);
+    var getGScore = makeGetUnique(gScore);
+    var setGScore = makeSetUnique(gScore);
+    var setCameFrom = makeSetUnique(cameFrom);
+    var getCameFrom = makeGetUnique(cameFrom);
+
+    openSet.push(beginNode);
+    setGScore(beginNode, 0);
+    setFScore(beginNode, 0 + estimateCost(from, to));
+
+
+    function lowestFScoreNode() {
+        var score = 99999999;
+        var lowest = null;
+        for(var index in openSet) {
+            var currentNode = openSet[index];
+            var currentScore = getFScore(currentNode);
+            if(currentScore !== null && currentScore < score) {
+                score = currentScore;
+                lowest = currentNode;
+            }
+        }
+        return lowest;
+    }
+
+    function makeNode(x, y) {
+        for(var i in nodesCache) {
+            var node = nodesCache[i];
+            if(node.x == x && node.y == y) {
+                return node;
+            }
+        }
+        var newNode = {
+            node: grid[x][y],
+            x: x,
+            y: y
+        };
+        nodesCache.push(newNode);
+        return newNode;
+    }
+    function retrievePath(came_from, current_node) {
+        var node = getCameFrom(current_node);
+        if(node !== null) {
+            var previous = retrievePath(came_from, node);
+            return [current_node].concat(previous);
+        } else {
+            return [current_node];
+        }
+    }
+
+    function findNeighbor (node) {
+        var indices = [];
+        function inGrid(x, y) {
+            return x >= 0 && y >= 0 && x < grid.length && y < grid[x].length;
+        }
+        function canAdd(x, y) {
+            if(inGrid(x, y)) {
+                return !grid[x][y].full;
+            }
+            return false;
+        }
+        function processNeighbor(x, y) {
+            if(canAdd(x, y)) {
+                indices.push(makeNode(x, y));
+            }
+        }
+        processNeighbor(node.x, node.y - 1);
+        processNeighbor(node.x - 1, node.y);
+        processNeighbor(node.x + 1, node.y);
+        processNeighbor(node.x, node.y + 1);
+
+        return indices;
+    }
+
+    function nodeEquals(n1, n2) {
+        return n1.x == n2.x && n1.y == n2.y;
+    }
+
+
+    while(openSet.length > 0) {
+        var current = lowestFScoreNode();
+        if(nodeEquals(current, to)) {
+            return retrievePath(cameFrom, makeNode(current.x, current.y));
+        }
+        openSet.splice(openSet.indexOf(current), 1);
+        closeSet.push(current);
+
+        var neighbors = findNeighbor(current);
+        for(var index in neighbors) {
+            var neighbor = neighbors[index];
+            if(closeSet.indexOf(neighbor) != -1) {
+                continue;
+            }
+
+            var tentativeGScore = getGScore(current) +  distanceBetween(current, neighbor);
+            if(openSet.indexOf(neighbor) === -1 || tentativeGScore < getGScore(neighbor)) {
+                setCameFrom(neighbor, current);
+                setGScore(neighbor, tentativeGScore);
+                setFScore(neighbor, tentativeGScore + distanceBetween(neighbor, to));
+                if(openSet.indexOf(neighbor) === -1) {
+                    openSet.push(neighbor);
+                }
+            }
+        }
+    }
+    return false;
+}
+

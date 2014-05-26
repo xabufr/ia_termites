@@ -19,9 +19,11 @@ function Wall() {
 
 Wall.prototype.draw = function(context) {
 	context.fillStyle = "rgba(0,0,0,0.5)";
-	context.strokeStyle = "#000";
+	context.strokeStyle = "#00FF00";
 	context.beginPath();
 	context.rect(this.x - this.boundingWidth/2, this.y - this.boundingHeight/2, this.boundingWidth, this.boundingHeight);
 	context.fill();
+    context.lineWidth = 5;
 	context.stroke();
+    context.lineWidth = 1;
 };
