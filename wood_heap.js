@@ -40,7 +40,7 @@ WoodHeap.prototype.draw = function(context) {
 	context.fill();
 	context.stroke();
     context.fillStyle = "blue";
-    context.fillText(Math.round(this.woodCount), this.x, this.y);
+    context.fillText(''+Math.round(this.woodCount), this.x, this.y);
 };
 
 WoodHeap.prototype.processCollision = function(collidedAgent) {

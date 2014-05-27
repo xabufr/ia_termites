@@ -264,7 +264,7 @@ function negociateNid(perceivedAgent) {
         if (otherNid.termites.length >= this.nid.termites.length) {
             setTermiteNid.call(this, otherNid);
         }
-    } else if(this.nid.version < otherNid.version) {
+    } else if (this.nid.version < otherNid.version) {
         var otherTermites = perceivedAgent.nid.termites;
         var added = false;
         for (var idx = 0; idx < otherTermites.length; ++idx) {
@@ -274,7 +274,7 @@ function negociateNid(perceivedAgent) {
                 added = true;
             }
         }
-        if(added) {
+        if (added) {
             this.nid.version = new Date();
         }
     }
@@ -453,7 +453,7 @@ function findPath(from, to, grid, minCaseSize) {
     function lowestFScoreNode() {
         var score = 99999999;
         var lowest = null;
-        for (var index in openSet) {
+        for (var index = 0; index < openSet.length; ++index) {
             var currentNode = openSet[index];
             var currentScore = fScore.get(currentNode);
             if (currentScore !== null && currentScore < score) {
@@ -465,7 +465,7 @@ function findPath(from, to, grid, minCaseSize) {
     }
 
     function makeNode(x, y) {
-        for (var i in nodesCache) {
+        for (var i = 0; i < nodesCache.length; ++i) {
             var node = nodesCache[i];
             if (node.x == x && node.y == y) {
                 return node;
@@ -561,7 +561,7 @@ function findPath(from, to, grid, minCaseSize) {
         closeSet.push(current);
 
         var neighbors = findNeighbor(current);
-        for (var index in neighbors) {
+        for (var index = 0; index < neighbors.length; ++index) {
             var neighbor = neighbors[index];
             if (closeSet.indexOf(neighbor) != -1) {
                 continue;

@@ -13,7 +13,7 @@ function WorldDNA(world) {
 }
 
 WorldDNA.prototype.copy = function(worldDNA) {
-	for(typeId in this.positionsByTypes) {
+	for(var typeId in this.positionsByTypes) {
 		var positions = this.positionsByTypes[typeId];
 		var transferedPositions = worldDNA.positionsByTypes[typeId];
 
@@ -25,19 +25,19 @@ WorldDNA.prototype.copy = function(worldDNA) {
 };
 
 WorldDNA.prototype.randomize = function() {
-	for(typeId in this.positionsByTypes) {
+	for(var typeId in this.positionsByTypes) {
 		var positions = this.positionsByTypes[typeId];
 
 		for(var i = 0; i < positions.length; i++) {
 			positions[i].x = Math.random() * this.worldWidth;
 			positions[i].y = Math.random() * this.worldHeight;
-		};
+		}
 	}
 };
 
 WorldDNA.prototype.mutate = function() {
 	var ratio = Math.random() * 0.05 + 0.15; 
-	for(typeId in this.positionsByTypes) {
+	for(var typeId in this.positionsByTypes) {
 		var positions = this.positionsByTypes[typeId];
 		var mutatedCount = Math.floor(positions.length * ratio);
 		for(var i = 0; i < mutatedCount; i++) {
@@ -51,7 +51,7 @@ WorldDNA.prototype.mutate = function() {
 WorldDNA.prototype.crossOver = function(worldDNA) {
 	var ratio = Math.random() * 0.3 + 0.4; 
 
-	for(typeId in this.positionsByTypes) {
+	for(var typeId in this.positionsByTypes) {
 		var positions = this.positionsByTypes[typeId];
 		var transferedPositions = worldDNA.positionsByTypes[typeId];
 
@@ -201,7 +201,7 @@ WorldSolver.prototype.processFitting = function(worldDNA) {
 };
 
 WorldSolver.prototype.applyDNA = function(worldDNA) {
-	for(typeId in this.agentsByTypes) {
+	for(var typeId in this.agentsByTypes) {
 		var agents = this.agentsByTypes[typeId];
 		var positions = worldDNA.positionsByTypes[typeId];
 		for(var i = 0; i < agents.length; i++) {

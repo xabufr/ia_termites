@@ -78,7 +78,7 @@ World.prototype.processPerception = function (agent1, agent2) {
     if (deltaVect.squareLength() < square(agent2.perceptionRadius + agent1.boundingRadius)) {
         agent2.processPerception(agent1);
     }
-}
+};
 
 World.prototype.agentsColliding = function (agent1, agent2) {
     if (agent1.boundingRadius > 0 && agent2.boundingRadius > 0) {
@@ -135,7 +135,7 @@ World.prototype.processCircleRectangleCollision = function (agent1, agent2) {
         return true;
     }
     return false;
-}
+};
 
 World.prototype.processRectangleRectangleCollision = function (agent1, agent2) {
     var rect1MinX = agent1.x - agent1.boundingWidth / 2;
@@ -164,7 +164,7 @@ World.prototype.processRectangleRectangleCollision = function (agent1, agent2) {
 
     return (overlapX && overlapY);
 
-}
+};
 
 function isBetween(x, a, b) {
     return (x >= a) && (x <= b);
@@ -174,9 +174,7 @@ World.prototype.agentCollidesBorders = function (agent) {
     if (agent.x - agent.boundingRadius <= 0) return true;
     if (agent.x + agent.boundingRadius >= this.width) return true;
     if (agent.y - agent.boundingRadius <= 0) return true;
-    if (agent.y + agent.boundingRadius >= this.height) return true;
-
-    return false;
+    return agent.y + agent.boundingRadius >= this.height;
 };
 
 World.prototype.clampPosition = function (agent) {
@@ -215,5 +213,5 @@ World.prototype.correctWalls = function () {
             }
         }
     }
-}
+};
 

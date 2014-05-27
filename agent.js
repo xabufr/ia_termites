@@ -1,6 +1,5 @@
 function uniqid() {
-    var id = ""+ parseInt(Math.random() * 100) + "-" + parseInt(Math.random() * 10000) + "-" + parseInt(Math.random() * 100);
-    return id;
+    return "" + parseInt(Math.random() * 100) + "-" + parseInt(Math.random() * 10000) + "-" + parseInt(Math.random() * 100);
 }
 function Agent () {
 	this.typeId = "agent";
@@ -41,10 +40,7 @@ Agent.prototype.collides = function(agent) {
 };
 
 Agent.prototype.contacts = function(agent) {
-	if(this.contactTypes.indexOf(agent.typeId) != -1) {
-		return true;
-	}
-	return false;
+	return this.contactTypes.indexOf(agent.typeId) != -1;
 };
 
 Agent.prototype.drop = function(agent) {
