@@ -37,10 +37,7 @@ Agent.prototype.processPerception = function(perceivedAgent) {
 };
 
 Agent.prototype.collides = function(agent) {
-	if(this.collideTypes.indexOf(agent.typeId) != -1) {
-		return true;
-	}
-	return false;
+	return this.collideTypes.indexOf(agent.typeId) != -1;
 };
 
 Agent.prototype.contacts = function(agent) {

@@ -7,6 +7,10 @@ Vect.prototype.length = function() {
 	return Math.sqrt(this.x*this.x + this.y*this.y);
 };
 
+Vect.prototype.squareLength = function() {
+   return this.x*this.x + this.y*this.y;
+};
+
 Vect.prototype.normalize = function(length) {
 	var currentLength = this.length();
 	if(currentLength > 0) {
