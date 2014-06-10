@@ -273,7 +273,7 @@ Termite.prototype.moveToNext = function (dt) {
     var dest = this.gotoData.nextPoint;
     var distanceToFinalSquare = square(this.x - dest.x) + square(this.y - dest.y);
     var finished = false;
-    if (distanceToFinalSquare < square(distance)) {
+    if (distanceToFinalSquare <= square(distance)) {
         distance = Math.sqrt(distanceToFinalSquare);
         if (this.gotoData.nextPoint === this.gotoData.destination) {
             finished = true;
@@ -298,14 +298,14 @@ Termite.prototype.moveToNext = function (dt) {
 
 Termite.prototype.draw = function (context) {
     context.fillStyle = this.hasWood ? "#f00" : "#000";
-/*    if(this.drawAStar)
-        context.fillStyle = "yellow";*/
+    if(this.drawAStar)
+        context.fillStyle = "yellow";
     context.strokeStyle = "#000";
     context.beginPath();
     context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-/*    if (this.drawAStar) {
+    if (this.drawAStar) {
         for (var i = 0; i < this.astar_grid.length; ++i) {
             var row = this.astar_grid[i];
             for (var j =0; j < row.length; ++j) {
@@ -333,7 +333,7 @@ Termite.prototype.draw = function (context) {
                 context.beginPath();
             }
         }
-    }*/
+    }
 };
 
 Termite.prototype.goto = function (x, y, callback) {
@@ -526,8 +526,29 @@ function calculateAStarGrid(walls, world_width, world_height) {
         };
         x = getArrayNoDuplicate(x.sort(comparator));
         y = getArrayNoDuplicate(y.sort(comparator));
+        x = splitWhenNecessary(x);
+        y = splitWhenNecessary(y);
 
         return {x: x, y: y};
+    }
+
+    function splitWhenNecessary(array) {
+        var lastPosition = array[0];
+        var ret = [array[0]];
+        for(var i = 1; i < array.length;++i) {
+            var current = array[i];
+            var diff = current - lastPosition;
+            if(diff > 50) {
+                var count = diff / 50;
+                var step = diff / count;
+                for(var j = 0; j < count; ++j) {
+                    ret.push(lastPosition + j * step);
+                }
+            }
+            ret.push(current);
+            lastPosition = current;
+        }
+        return ret;
     }
 
     function makeGridFromSortedCoords(x, y) {
