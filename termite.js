@@ -77,15 +77,18 @@ function Termite(world_width, world_height) {
     this.drawAStar = false;
 
     this.gotoData = null;
+    this.lastWoodHeapCollision = null;
     this.initExpertSystem();
 }
 
 Termite.prototype.initExpertSystem = function(){
     this.expertSystem = new ExpertSystem();
 
-    this.expertSystem.addRule('searchWood', ['hasHeapInfos']);
+    this.expertSystem.addRule('searchWood', ['hasHeapInfos', 'hasNotWood', 'isNotMoving']);
     this.expertSystem.addRule('explore', ['hasNotHeapInfos', 'isNotMoving']);
-    this.expertSystem.addRule('pushWoodToNid', ['hasWood']);
+    this.expertSystem.addRule('goToNid', ['hasWood', 'hasNid']);
+    this.expertSystem.addRule('pushWood', ['hasWood', 'hasNid', 'isInNid']);
+    this.expertSystem.addRule('pullWood', ['hasNotWood', 'hasNid', 'hasCollidedHeap', 'isNotInNid']);
 }
 
 Termite.prototype.perceive = function(){
@@ -94,10 +97,20 @@ Termite.prototype.perceive = function(){
     this.expertSystem.setFactValid('hasHeapInfos', (this.hasHeap()));
     this.expertSystem.setFactValid('hasNotHeapInfos', (!this.hasHeap()));
     this.expertSystem.setFactValid('hasWood', this.hasWood);
+    this.expertSystem.setFactValid('hasNotWood', !this.hasWood);
     this.expertSystem.setFactValid('isNotMoving', (this.gotoData === null));
+    this.expertSystem.setFactValid('hasCollidedHeap', (this.lastWoodHeapCollision !== null));
+    this.expertSystem.setFactValid('hasNid', (this.nid !== null));
+    this.expertSystem.setFactValid('isInNid', (this.nid !== null && this.lastWoodHeapCollision !== null && this.nid.id === this.lastWoodHeapCollision.id));
+    this.expertSystem.setFactValid('isNotInNid', (this.nid !== null && this.lastWoodHeapCollision !== null && this.nid.id !== this.lastWoodHeapCollision.id));
+}
+
+function updateHeapInfo(object, heapInfo) {
+    object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: new Date()});
 }
 
 Termite.prototype.act = function(conclusions){
+
     for (var index in conclusions)
     {
         switch (conclusions[index])
@@ -108,8 +121,26 @@ Termite.prototype.act = function(conclusions){
             case 'explore':
                 this.explore();
                 break;
-            case 'pushWoodToNid':
-                this.pushWoodToNid();
+            case 'goToNid':
+                this.goToNid();
+                break;
+            case 'pushWood':
+            {
+                this.lastWoodHeapCollision.addWood();
+                this.hasWood = false;
+                this.lastWoodHeapCollision = null;
+            }
+                break;
+            case 'pullWood':
+            {
+                if (this.lastWoodHeapCollision.woodCount > 0){
+                    this.lastWoodHeapCollision.takeWood();
+                    updateHeapInfo(this.heapInfos, this.lastWoodHeapCollision);
+                    this.hasWood = true;
+                }
+                this.lastWoodHeapCollision = null;
+            }
+                break;
         }
     }
 }
@@ -149,24 +180,22 @@ Termite.prototype.explore = function(){
 Termite.prototype.searchWood = function(){
     var heap = null;
 
-    for (var index in this.heapInfos){
-        var currentHeap = this.heapInfos[index];
-
-        if (currentHeap.count == 0)
-            continue;
+    this.heapInfos.forEach(function(id, currentHeap){
+        if (currentHeap.count == 0 || this.nid.id === id)
+            return true;
 
         if(heap === null)
             heap = currentHeap;
         else if (heap.count < currentHeap.count)
             heap = currentHeap;
-    }
+    }, this);
 
     this.goto(heap.x, heap.y, null);
 
 };
 
-Termite.prototype.pushWoodToNid = function(){
-    this.goto(this.nid.x, this.nid.y, null)
+Termite.prototype.goToNid = function(){
+    this.goto(this.nid.position.x, this.nid.position.y, null)
 }
 
 Termite.prototype.hasHeap = function(){
@@ -292,14 +321,7 @@ Termite.prototype.goto = function (x, y, callback) {
 Termite.prototype.processCollision = function (collidedAgent) {
     if (collidedAgent == null) {
     } else if (collidedAgent.typeId == "wood_heap") {
-        if (this.hasWood) {
-            collidedAgent.addWood();
-            this.hasWood = false;
-        } else {
-            collidedAgent.takeWood();
-            this.hasWood = true;
-        }
-        //this.changeDirection();
+        this.lastWoodHeapCollision = collidedAgent;
     } else if (collidedAgent.typeId == "wall") {
         this.processWallPerception(collidedAgent);
     }
@@ -391,12 +413,7 @@ Termite.prototype.processWallPerception = function (perceivedAgent) {
 Termite.prototype.processPerception = function (perceivedAgent) {
 
     if (perceivedAgent.typeId == "wood_heap") {
-        this.heapInfos.set(perceivedAgent.identifier, {
-            "x": perceivedAgent.x,
-            "y": perceivedAgent.y,
-            "count": perceivedAgent.woodCount,
-            "date": new Date()
-        });
+        updateHeapInfo(this.heapInfos, perceivedAgent);
         if (this.nid === null) {
             this.nid = {
                 id: perceivedAgent.id,
