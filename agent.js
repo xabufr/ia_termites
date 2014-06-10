@@ -56,7 +56,7 @@ Agent.prototype.moveTo = function(x, y) {
 };
 
 Agent.prototype.moveBy = function(direction, length) {
-	if(direction.x != 0 && direction.y != 0 && length > 0) {
+	if((direction.x != 0 || direction.y != 0) && length > 0) {
 		var moveVect = new Vect(direction.x, direction.y);
 		moveVect.normalize(length);
 		//console.log(direction.x, direction.y);
