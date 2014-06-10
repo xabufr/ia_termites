@@ -12,6 +12,7 @@
     <script type="text/javascript" src="./wood_heap.js"></script>
     <script type="text/javascript" src="./wall.js"></script>
     <script type="text/javascript" src="./world_solver.js"></script>
+    <script type="text/javascript" src="./random.js"></script>
     <script language="javascript">
         var world = null;
         var canvasElement = null;
@@ -79,13 +80,12 @@
             }
 
             world.correctWalls();
-            /*canvasElement.addEventListener('click', function (event) {
-                var x = event.clientX - canvasElement.offsetLeft;
-                var y = event.clientY - canvasElement.offsetTop;
-                termites.forEach(function (termite) {
-                    termite.goto(x, y, null);
-                });
-            }, false);*/
+            canvasElement.addEventListener('click', function (event) {
+                var woodHeap = new WoodHeap();
+                woodHeap.x = event.clientX - canvasElement.offsetLeft;
+                woodHeap.y = event.clientY - canvasElement.offsetTop;
+                world.addAgent(woodHeap)
+            }, false);
 
 
             var fps = 60;

@@ -51,6 +51,10 @@ function makeSet() {
         }
     };
 }
+
+function currentDate() {
+    return window.performance.now();
+}
 function Termite(world_width, world_height) {
     Agent.call(this);
     this.typeId = "termite";
@@ -59,7 +63,7 @@ function Termite(world_width, world_height) {
 
     this.hasWood = false;
 
-    this.collideTypes = ["wood_heap", "wall"];
+    this.collideTypes = ["wall"];
     this.contactTypes = ["wood_heap", "wall"];
 
 
@@ -89,7 +93,7 @@ Termite.prototype.initExpertSystem = function(){
     this.expertSystem.addRule('goToNid', ['hasWood', 'hasNid']);
     this.expertSystem.addRule('pushWood', ['hasWood', 'hasNid', 'isInNid']);
     this.expertSystem.addRule('pullWood', ['hasNotWood', 'hasNid', 'hasCollidedHeap', 'isNotInNid']);
-}
+};
 
 Termite.prototype.perceive = function(){
     this.expertSystem.resetFactValues();
@@ -106,7 +110,7 @@ Termite.prototype.perceive = function(){
 }
 
 function updateHeapInfo(object, heapInfo) {
-    object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: new Date()});
+    object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: currentDate()});
 }
 
 Termite.prototype.act = function(conclusions){
@@ -180,15 +184,15 @@ Termite.prototype.explore = function(){
 Termite.prototype.searchWood = function(){
     var heap = null;
 
+    var heaps = {};
     this.heapInfos.forEach(function(id, currentHeap){
         if (currentHeap.count == 0 || this.nid.id === id)
             return true;
-
-        if(heap === null)
-            heap = currentHeap;
-        else if (heap.count < currentHeap.count)
-            heap = currentHeap;
+        heaps[id] = currentHeap.count;
     }, this);
+
+    var heap_id = getRandomWeightedValue(heaps);
+    var heap = this.heapInfos.get(heap_id);
 
     this.goto(heap.x, heap.y, null);
 
@@ -349,7 +353,7 @@ function negociateNid(perceivedAgent) {
             x: otherNid.position.x,
             y: otherNid.position.y
         };
-        this.nid.version = new Date();
+        this.nid.version = currentDate();
         for (var idx = 0; idx < otherNid.termites.length; ++idx) {
             this.nid.termites.push(otherNid.termites[idx]);
         }
@@ -381,7 +385,7 @@ function negociateNid(perceivedAgent) {
             }
         }
         if (added) {
-            this.nid.version = new Date();
+            this.nid.version = currentDate();
         }
     }
 }
@@ -422,7 +426,7 @@ Termite.prototype.processPerception = function (perceivedAgent) {
                     x: perceivedAgent.x,
                     y: perceivedAgent.y
                 },
-                version: new Date()
+                version: currentDate()
             };
         }
     } else if (perceivedAgent.typeId == "termite") {
