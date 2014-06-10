@@ -26,9 +26,16 @@
             dt = now - lastUpdate;
             lastUpdate = now;
         }
-
+        var timeSinceLast = 0;
+        var frameCount = 0;
         function update() {
             updateTime();
+            timeSinceLast += dt;
+            ++frameCount;
+            if(timeSinceLast >= 1000) {
+                console.log((frameCount / timeSinceLast) * 1000);
+                frameCount = timeSinceLast = 0;
+            }
             world.update(dt);
             canvasContext.clearRect(0, 0, canvasElement.width, canvasElement.height);
             world.draw(canvasContext);
@@ -62,7 +69,7 @@
             world.draw(canvasContext);
 
             var termites = [];
-            for (var i = 0; i < 2; i++) {
+            for (var i = 0; i < 50; i++) {
                 var termite = new Termite(canvasElement.width, canvasElement.height);
                 termite.drawAStar = i === 0;
                 world.addAgent(termite);

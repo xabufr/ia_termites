@@ -1,24 +1,15 @@
 Termite.prototype = new Agent();
 Termite.prototype.constructor = Termite;
 
-function Termite(world_width, world_height) {
-    Agent.call(this);
-    this.typeId = "termite";
-    this.boundingRadius = 3;
-    this.perceptionRadius = 50;
-
-    this.hasWood = false;
-
-    this.collideTypes = ["wood_heap", "wall"];
-    this.contactTypes = ["wood_heap", "wall"];
-
-    this.heapInfos = {
+function makeSet() {
+    return {
         data: [],
+        data_keys: [],
         getContainer: function (id) {
-            for (var i in this.data) {
-                var obj = data[i];
+            for (var i = 0; i < this.data.length; ++i) {
+                var obj = this.data[i];
                 if (obj.key === id) {
-                    return obj.value;
+                    return obj;
                 }
             }
             return null;
@@ -30,33 +21,50 @@ function Termite(world_width, world_height) {
             }
             return null;
         },
-        set: function (id, value) {
-            var obj = this.getContainer(id);
+        set: function (key, value) {
+            var obj = this.getContainer(key);
             if (obj === null) {
                 obj = {
-                    key: id,
+                    key: key,
                     value: value
                 };
                 this.data.push(obj);
+                this.data_keys.push(key);
             } else {
                 obj.value = value;
             }
         },
         keys: function () {
-            var keys = new Array(this.data.length);
-            for (var i in this.data) {
-                keys[i] = this.data[i].key;
-            }
-            return keys;
+            return this.data_keys;
         },
         forEach: function (callback, that) {
-            for (var i in this.data) {
+            for (var i = 0; i < this.data.length; ++i) {
                 var obj = this.data[i];
-                callback.call(that, obj.key, obj.value);
+                var result = callback.call(that, obj.key, obj.value);
+                if (result === false) {
+                    return;
+                }
             }
+        },
+        contains: function (key) {
+            return this.data_keys.indexOf(key) !== -1;
         }
     };
-    this.walls = {};
+}
+function Termite(world_width, world_height) {
+    Agent.call(this);
+    this.typeId = "termite";
+    this.boundingRadius = 3;
+    this.perceptionRadius = 50;
+
+    this.hasWood = false;
+
+    this.collideTypes = ["wood_heap", "wall"];
+    this.contactTypes = ["wood_heap", "wall"];
+
+
+    this.heapInfos = makeSet();
+    this.walls = makeSet();
     this.speed = 50 * 3;
     this.updateRandomDirection();
 
@@ -205,7 +213,7 @@ Termite.prototype.moveToNext = function (dt) {
         if (this.gotoData.nextPoint === this.gotoData.destination) {
             finished = true;
         } else {
-            this.gotoData.nextPoint = null;
+            this.findNextGotoPoint();
         }
     }
     var direction = {
@@ -230,52 +238,55 @@ Termite.prototype.draw = function (context) {
     context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-    if (this.drawAStar) {
-        for (var i in this.astar_grid) {
-            var row = this.astar_grid[i];
-            for (var j in row) {
-                var rect = row[j];
-                context.beginPath();
-                context.fillStyle = "rgba(255, 0, 0, 0.15)";
-                context.rect(rect.x, rect.y, rect.width, rect.height);
-                if (rect.full) {
-                    context.fill();
-                }
-                context.stroke();
-                context.fillStyle = "blue";
-                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
-            }
-        }
-        if (this.gotoData !== null) {
-            var paths = this.gotoData.path;
-            for (var i in paths) {
-                var path = paths[i];
-                var rect = path.node;
-                context.beginPath();
-                context.fillStyle = "rgba(0, 255, 0, 0.15)";
-                context.rect(rect.x, rect.y, rect.width, rect.height);
-                context.fill();
-                context.beginPath();
-            }
-        }
-    }
+//    if (this.drawAStar) {
+//        for (var i = 0; i < this.astar_grid.length; ++i) {
+//            var row = this.astar_grid[i];
+//            for (var j =0; j < row.length; ++j) {
+//                var rect = row[j];
+//                context.beginPath();
+//                context.fillStyle = "rgba(255, 0, 0, 0.15)";
+//                context.rect(rect.x, rect.y, rect.width, rect.height);
+//                if (rect.full) {
+//                    context.fill();
+//                }
+//                context.stroke();
+//                context.fillStyle = "blue";
+//                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
+//            }
+//        }
+//        if (this.gotoData !== null) {
+//            var paths = this.gotoData.path;
+//            for (var i = 0; i < paths.length; ++i) {
+//                var path = paths[i];
+//                var rect = path.node;
+//                context.beginPath();
+//                context.fillStyle = "rgba(0, 255, 0, 0.15)";
+//                context.rect(rect.x, rect.y, rect.width, rect.height);
+//                context.fill();
+//                context.beginPath();
+//            }
+//        }
+//    }
 };
 
 Termite.prototype.goto = function (x, y, callback) {
     var gridStart = worldToGrid(this.x, this.y, this.astar_grid);
     var gridGoal = worldToGrid(x, y, this.astar_grid);
-    var astarPath = findPath(gridStart, gridGoal, this.astar_grid, this.boundingRadius);
-
-    this.gotoData = {
-        path: astarPath,
-        nextPoint: null,
-        pathIndex: 0,
-        destination: {
-            x: x,
-            y: y
-        },
-        callback: callback
-    };
+    var astarPath = findPath(gridStart, gridGoal, this.astar_grid, square(this.boundingRadius) - 1);
+    if (astarPath !== false) {
+        this.gotoData = {
+            path: astarPath,
+            nextPoint: null,
+            pathIndex: 0,
+            destination: {
+                x: x,
+                y: y
+            },
+            callback: callback
+        };
+    } else {
+        this.gotoData = null;
+    }
 };
 
 Termite.prototype.processCollision = function (collidedAgent) {
@@ -312,9 +323,12 @@ function negociateNid(perceivedAgent) {
     function setTermiteNid(otherNid) {
         this.nid.id = otherNid.id;
         this.nid.termites = [this.id];
-        this.nid.position.x = otherNid.position.x;
-        this.nid.position.y = otherNid.position.y;
-        for (var idx in otherNid.termites) {
+        this.nid.position = {
+            x: otherNid.position.x,
+            y: otherNid.position.y
+        };
+        this.nid.version = new Date();
+        for (var idx = 0; idx < otherNid.termites.length; ++idx) {
             this.nid.termites.push(otherNid.termites[idx]);
         }
     }
@@ -331,25 +345,30 @@ function negociateNid(perceivedAgent) {
 
 
     if (otherNid.id != this.nid.id) {
-        if (otherNid.termites.length >= this.nid.length) {
+        if (otherNid.termites.length >= this.nid.termites.length) {
             setTermiteNid.call(this, otherNid);
         }
-    } else {
+    } else if (this.nid.version < otherNid.version) {
         var otherTermites = perceivedAgent.nid.termites;
-        for (var idx in  otherTermites) {
+        var added = false;
+        for (var idx = 0; idx < otherTermites.length; ++idx) {
             var t_id = otherTermites[idx];
-            if (this.nid.termites.indexOf(t_id) !== -1) {
+            if (this.nid.termites.indexOf(t_id) === -1) {
                 this.nid.termites.push(t_id);
+                added = true;
             }
+        }
+        if (added) {
+            this.nid.version = new Date();
         }
     }
 }
 function getWallFromOther(other) {
-    for (var wallId in other.walls) {
-        if (!(wallId in this.walls)) {
-            this.addWall(other.walls[wallId]);
+    other.walls.forEach(function (id, wall) {
+        if (this.walls.contains(id) === false) {
+            this.addWall((wall));
         }
-    }
+    }, this);
 }
 
 function isPointInRect(x, y, rect) {
@@ -358,7 +377,7 @@ function isPointInRect(x, y, rect) {
     }
 }
 Termite.prototype.processWallPerception = function (perceivedAgent) {
-    if (!(perceivedAgent.id in this.walls)) {
+    if (this.walls.get(perceivedAgent.id) === null) {
         var wallInfos = {
             id: perceivedAgent.id,
             x: perceivedAgent.x - perceivedAgent.boundingWidth * 0.5,
@@ -370,22 +389,14 @@ Termite.prototype.processWallPerception = function (perceivedAgent) {
     }
 };
 Termite.prototype.processPerception = function (perceivedAgent) {
-    function exchangeHeapInfos() {
-        perceivedAgent.heapInfos.forEach(function (key, heapInfo) {
-            var curHeadInfo = this.heapInfos.get(i);
-            if (curHeadInfo === null || curHeadInfo.date < heapInfo.date) {
-                this.heapInfos.set(i, heapInfo);
-            }
-        }, this);
-    }
 
     if (perceivedAgent.typeId == "wood_heap") {
-        this.heapInfos[perceivedAgent.identifier] = {
+        this.heapInfos.set(perceivedAgent.identifier, {
             "x": perceivedAgent.x,
             "y": perceivedAgent.y,
             "count": perceivedAgent.woodCount,
             "date": new Date()
-        };
+        });
         if (this.nid === null) {
             this.nid = {
                 id: perceivedAgent.id,
@@ -393,11 +404,12 @@ Termite.prototype.processPerception = function (perceivedAgent) {
                 position: {
                     x: perceivedAgent.x,
                     y: perceivedAgent.y
-                }
+                },
+                version: new Date()
             };
         }
     } else if (perceivedAgent.typeId == "termite") {
-        exchangeHeapInfos.call(this);
+        exchangeHeapInfos.call(this, perceivedAgent);
         negociateNid.call(this, perceivedAgent);
         getWallFromOther.call(this, perceivedAgent);
     } else if (perceivedAgent.typeId == "wall") {
@@ -405,8 +417,17 @@ Termite.prototype.processPerception = function (perceivedAgent) {
     }
 };
 
+function exchangeHeapInfos(perceivedAgent) {
+    perceivedAgent.heapInfos.forEach(function (key, heapInfo) {
+        var thisHeapInfo = this.heapInfos.get(key);
+        if (thisHeapInfo === null || thisHeapInfo.date < heapInfo.date) {
+            this.heapInfos.set(key, heapInfo);
+        }
+    }, this);
+}
+
 Termite.prototype.addWall = function (wall) {
-    this.walls[wall.id] = wall;
+    this.walls.set(wall.id, wall);
     this.astar_grid = calculateAStarGrid(this.walls, this.worldWidth, this.worldHeight);
     if (this.gotoData !== null) {
         this.goto(this.gotoData.destination.x, this.gotoData.destination.y, this.gotoData.callback);
@@ -417,7 +438,7 @@ function calculateAStarGrid(walls, world_width, world_height) {
     function getArrayNoDuplicate(array) {
         var values = {};
         var noDuplicates = [];
-        for (var index in array) {
+        for (var index = 0; index < array.length; ++index) {
             var value = array[index];
             if (!(value in values)) {
                 noDuplicates.push(value);
@@ -430,13 +451,12 @@ function calculateAStarGrid(walls, world_width, world_height) {
     function findAllCoordsSorted() {
         var x = [0, world_width];
         var y = [0, world_height];
-        for (var index in walls) {
-            var wall = walls[index];
+        walls.forEach(function (id, wall) {
             x.push(wall.x);
             x.push(wall.x + wall.width);
             y.push(wall.y);
             y.push(wall.y + wall.height);
-        }
+        });
 
         var comparator = function (a, b) {
             return a - b;
@@ -506,55 +526,24 @@ function findPath(from, to, grid, minCaseSize) {
 
     var closeSet = [];
     var openSet = [];
-    var cameFrom = [];
-    var fScore = [];
-    var gScore = [];
     var nodesCache = [];
     var beginNode = makeNode(from.x, from.y);
 
-    function makeGetUnique(container) {
-        return function (node) {
-            for (var i in container) {
-                var curr = container[i];
-                if (curr.key == node) {
-                    return curr.value;
-                }
-            }
-            return null;
-        }
-    }
-
-    function makeSetUnique(container) {
-        return function (key, value) {
-            for (var i in container) {
-                var curr = container[i];
-                if (curr.key === key) {
-                    curr.value = value;
-                    return;
-                }
-            }
-            container.push({key: key, value: value});
-        }
-    }
-
-    var getFScore = makeGetUnique(fScore);
-    var setFScore = makeSetUnique(fScore);
-    var getGScore = makeGetUnique(gScore);
-    var setGScore = makeSetUnique(gScore);
-    var setCameFrom = makeSetUnique(cameFrom);
-    var getCameFrom = makeGetUnique(cameFrom);
+    var fScore = makeSet();
+    var gScore = makeSet();
+    var cameFrom = makeSet();
 
     openSet.push(beginNode);
-    setGScore(beginNode, 0);
-    setFScore(beginNode, 0 + estimateCost(from, to));
+    gScore.set(beginNode, 0);
+    fScore.set(beginNode, 0 + estimateCost(from, to));
 
 
     function lowestFScoreNode() {
         var score = 99999999;
         var lowest = null;
-        for (var index in openSet) {
+        for (var index = 0; index < openSet.length; ++index) {
             var currentNode = openSet[index];
-            var currentScore = getFScore(currentNode);
+            var currentScore = fScore.get(currentNode);
             if (currentScore !== null && currentScore < score) {
                 score = currentScore;
                 lowest = currentNode;
@@ -564,7 +553,7 @@ function findPath(from, to, grid, minCaseSize) {
     }
 
     function makeNode(x, y) {
-        for (var i in nodesCache) {
+        for (var i = 0; i < nodesCache.length; ++i) {
             var node = nodesCache[i];
             if (node.x == x && node.y == y) {
                 return node;
@@ -580,7 +569,7 @@ function findPath(from, to, grid, minCaseSize) {
     }
 
     function retrievePath(came_from, current_node) {
-        var node = getCameFrom(current_node);
+        var node = came_from.get(current_node);
         if (node !== null) {
             var previous = retrievePath(came_from, node);
             return previous.concat([current_node])
@@ -660,17 +649,17 @@ function findPath(from, to, grid, minCaseSize) {
         closeSet.push(current);
 
         var neighbors = findNeighbor(current);
-        for (var index in neighbors) {
+        for (var index = 0; index < neighbors.length; ++index) {
             var neighbor = neighbors[index];
             if (closeSet.indexOf(neighbor) != -1) {
                 continue;
             }
 
-            var tentativeGScore = getGScore(current) + distanceBetween(current, neighbor);
-            if (openSet.indexOf(neighbor) === -1 || tentativeGScore < getGScore(neighbor)) {
-                setCameFrom(neighbor, current);
-                setGScore(neighbor, tentativeGScore);
-                setFScore(neighbor, tentativeGScore + distanceBetween(neighbor, to));
+            var tentativeGScore = gScore.get(current) + distanceBetween(current, neighbor);
+            if (openSet.indexOf(neighbor) === -1 || tentativeGScore < gScore.get(neighbor)) {
+                cameFrom.set(neighbor, current);
+                gScore.set(neighbor, tentativeGScore);
+                fScore.set(neighbor, tentativeGScore + distanceBetween(neighbor, to));
                 if (openSet.indexOf(neighbor) === -1) {
                     openSet.push(neighbor);
                 }
