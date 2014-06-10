@@ -186,9 +186,9 @@ Termite.prototype.searchWood = function(){
 
     var heaps = {};
     this.heapInfos.forEach(function(id, currentHeap){
-        if (currentHeap.count == 0 || this.nid.id === id)
+        if (currentHeap.count <= 0 || this.nid.id === id)
             return true;
-        heaps[id] = currentHeap.count;
+        heaps[id] = currentHeap.count * 100;
     }, this);
 
     var heap_id = getRandomWeightedValue(heaps);
@@ -205,7 +205,7 @@ Termite.prototype.goToNid = function(){
 Termite.prototype.hasHeap = function(){
     var hasHeap = false;
     this.heapInfos.forEach(function(id, currentHeap){
-        if (currentHeap.count > 0 && this.nid.id != id) {
+        if (currentHeap.count >= 0 && this.nid.id != id) {
             hasHeap = true;
             return false;
         }
