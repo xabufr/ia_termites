@@ -175,10 +175,10 @@ Termite.prototype.explore = function(){
         x = Math.random() * this.worldWidth;
         y = Math.random() * this.worldHeight;
         var rect = {
-            x: x - this.boundingRadius,
-            y: y - this.boundingRadius,
-            width: this.boundingRadius,
-            height: this.boundingRadius
+            x: x - this.boundingRadius - 1,
+            y: y - this.boundingRadius - 1,
+            width: this.boundingRadius * 2 + 2,
+            height: this.boundingRadius * 2 + 2
         }
 
         isEmpty = !isRectInWalls(rect, this.walls);
@@ -205,7 +205,9 @@ Termite.prototype.searchWood = function(){
 };
 
 Termite.prototype.goToNid = function(){
-    this.goto(this.nid.position.x, this.nid.position.y, null)
+    if(this.gotoData === null || this.nid.position.x != this.gotoData.destination.x || this.nid.position.y != this.gotoData.destination.y) {
+        this.goto(this.nid.position.x, this.nid.position.y, null)
+    }
 }
 
 Termite.prototype.hasHeap = function(){
@@ -272,40 +274,42 @@ Termite.prototype.moveToNext = function (dt) {
 
 Termite.prototype.draw = function (context) {
     context.fillStyle = this.hasWood ? "#f00" : "#000";
+    if(this.drawAStar)
+        context.fillStyle = "yellow";
     context.strokeStyle = "#000";
     context.beginPath();
     context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-//    if (this.drawAStar) {
-//        for (var i = 0; i < this.astar_grid.length; ++i) {
-//            var row = this.astar_grid[i];
-//            for (var j =0; j < row.length; ++j) {
-//                var rect = row[j];
-//                context.beginPath();
-//                context.fillStyle = "rgba(255, 0, 0, 0.15)";
-//                context.rect(rect.x, rect.y, rect.width, rect.height);
-//                if (rect.full) {
-//                    context.fill();
-//                }
-//                context.stroke();
-//                context.fillStyle = "blue";
-//                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
-//            }
-//        }
-//        if (this.gotoData !== null) {
-//            var paths = this.gotoData.path;
-//            for (var i = 0; i < paths.length; ++i) {
-//                var path = paths[i];
-//                var rect = path.node;
-//                context.beginPath();
-//                context.fillStyle = "rgba(0, 255, 0, 0.15)";
-//                context.rect(rect.x, rect.y, rect.width, rect.height);
-//                context.fill();
-//                context.beginPath();
-//            }
-//        }
-//    }
+    if (this.drawAStar) {
+        for (var i = 0; i < this.astar_grid.length; ++i) {
+            var row = this.astar_grid[i];
+            for (var j =0; j < row.length; ++j) {
+                var rect = row[j];
+                context.beginPath();
+                context.fillStyle = "rgba(255, 0, 0, 0.15)";
+                context.rect(rect.x, rect.y, rect.width, rect.height);
+                if (rect.full) {
+                    context.fill();
+                }
+                context.stroke();
+                context.fillStyle = "blue";
+                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
+            }
+        }
+        if (this.gotoData !== null) {
+            var paths = this.gotoData.path;
+            for (var i = 0; i < paths.length; ++i) {
+                var path = paths[i];
+                var rect = path.node;
+                context.beginPath();
+                context.fillStyle = "rgba(0, 255, 0, 0.15)";
+                context.rect(rect.x, rect.y, rect.width, rect.height);
+                context.fill();
+                context.beginPath();
+            }
+        }
+    }
 };
 
 Termite.prototype.goto = function (x, y, callback) {
