@@ -82,6 +82,7 @@ function Termite(world_width, world_height) {
 
     this.gotoData = null;
     this.lastWoodHeapCollision = null;
+    this.lastPerceived = [];
     this.initExpertSystem();
 }
 
@@ -156,6 +157,7 @@ Termite.prototype.updateRandomDirection = function () {
 
 Termite.prototype.update = function (dt) {
     this.perceive();
+    this.updatePerceived();
     var conclusions = this.expertSystem.inferForward();
     this.act(conclusions);
     if (this.gotoData != null) {
@@ -164,6 +166,28 @@ Termite.prototype.update = function (dt) {
         }
         this.moveToNext(dt);
     }
+};
+
+Termite.prototype.updatePerceived = function() {
+    this.heapInfos.forEach(function(id, infos) {
+        if(infos.count <= 0)
+            return true;
+        var vec = new Vect(this.x - infos.x, this.y - infos.y);
+        if(vec.squareLength() < square(this.perceptionRadius)) {
+            var perceived = false;
+            for(var i = 0; i < this.lastPerceived.length;++i) {
+                if(this.lastPerceived[i].id == id) {
+                    perceived = true;
+                    break;
+                }
+            }
+            if(!perceived) {
+                infos.count = -1;
+                infos.date = currentDate();
+            }
+        }
+    }, this);
+    this.lastPerceived = [];
 };
 
 Termite.prototype.explore = function(){
@@ -433,7 +457,7 @@ Termite.prototype.processWallPerception = function (perceivedAgent) {
     }
 };
 Termite.prototype.processPerception = function (perceivedAgent) {
-
+    this.lastPerceived.push(perceivedAgent);
     if (perceivedAgent.typeId == "wood_heap") {
         updateHeapInfo(this.heapInfos, perceivedAgent);
         if (this.nid === null) {
