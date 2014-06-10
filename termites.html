@@ -4,6 +4,10 @@
     <script type="text/javascript" src="./vector.js"></script>
     <script type="text/javascript" src="./world.js"></script>
     <script type="text/javascript" src="./agent.js"></script>
+    <script type="text/javascript" src="./expert_system/rule.js"></script>
+    <script type="text/javascript" src="./expert_system/fact.js"></script>
+    <script type="text/javascript" src="./expert_system/engine.js"></script>
+    <script type="text/javascript" src="./expert_system/expert_system.js"></script>
     <script type="text/javascript" src="./termite.js"></script>
     <script type="text/javascript" src="./wood_heap.js"></script>
     <script type="text/javascript" src="./wall.js"></script>
@@ -55,7 +59,7 @@
             var solver = new WorldSolver(world);
             solver.solve();
 
-            //world.draw(canvasContext);
+            world.draw(canvasContext);
 
             var termites = [];
             for (var i = 0; i < 2; i++) {
@@ -68,18 +72,18 @@
             }
 
             world.correctWalls();
-            canvasElement.addEventListener('click', function (event) {
+            /*canvasElement.addEventListener('click', function (event) {
                 var x = event.clientX - canvasElement.offsetLeft;
                 var y = event.clientY - canvasElement.offsetTop;
                 termites.forEach(function (termite) {
                     termite.goto(x, y, null);
                 });
-            }, false);
+            }, false);*/
 
 
             var fps = 60;
             mainLoop = setInterval(update, 1000 / fps);
-            //update();
+            update();
         }
     </script>
 </head>

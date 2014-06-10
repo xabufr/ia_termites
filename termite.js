@@ -69,18 +69,52 @@ function Termite(world_width, world_height) {
     this.drawAStar = false;
 
     this.gotoData = null;
+    this.initExpertSystem();
+}
+
+Termite.prototype.initExpertSystem = function(){
+    this.expertSystem = new ExpertSystem();
+
+    this.expertSystem.addRule('searchWood', ['hasHeapInfos']);
+    this.expertSystem.addRule('explore', ['hasNotHeapInfos', 'isNotMoving']);
+    this.expertSystem.addRule('pushWoodToNid', ['hasWood']);
+}
+
+Termite.prototype.perceive = function(){
+    this.expertSystem.resetFactValues();
+
+    this.expertSystem.setFactValid('hasHeapInfos', (this.hasHeap()));
+    this.expertSystem.setFactValid('hasNotHeapInfos', (!this.hasHeap()));
+    this.expertSystem.setFactValid('hasWood', this.hasWood);
+    this.expertSystem.setFactValid('isNotMoving', (this.gotoData === null));
+}
+
+Termite.prototype.act = function(conclusions){
+    for (var index in conclusions)
+    {
+        switch (conclusions[index])
+        {
+            case 'searchWood':
+                this.searchWood();
+                break;
+            case 'explore':
+                this.explore();
+                break;
+            case 'pushWoodToNid':
+                this.pushWoodToNid();
+        }
+    }
 }
 
 Termite.prototype.updateRandomDirection = function () {
     this.direction = new Vect(Math.random() * 2 - 1, Math.random() * 2 - 1);
     this.direction.normalize(1);
 };
-Termite.prototype.setTarget = function (x, y) {
-    this.direction = new Vect(x - this.x, y - this.y);
-    this.direction.normalize(1);
-};
 
 Termite.prototype.update = function (dt) {
+    this.perceive();
+    var conclusions = this.expertSystem.inferForward();
+    this.act(conclusions);
     if (this.gotoData != null) {
         if (this.gotoData.nextPoint === null) {
             this.findNextGotoPoint();
@@ -88,6 +122,56 @@ Termite.prototype.update = function (dt) {
         this.moveToNext(dt);
     }
 };
+
+Termite.prototype.explore = function(){
+    var isEmpty = false;
+    var x = 0;
+    var y = 0;
+
+    while (!isEmpty) {
+        x = Math.random() * this.worldWidth;
+        y = Math.random() * this.worldHeight;
+
+        isEmpty = !isPointOfWall(x, y, this.walls);
+    }
+
+    this.goto(x, y, null);
+};
+
+Termite.prototype.searchWood = function(){
+    var heap = null;
+
+    for (var index in this.heapInfos){
+        var currentHeap = this.heapInfos[index];
+
+        if (currentHeap.count == 0)
+            continue;
+
+        if(heap === null)
+            heap = currentHeap;
+        else if (heap.count < currentHeap.count)
+            heap = currentHeap;
+    }
+
+    this.goto(heap.x, heap.y, null);
+
+};
+
+Termite.prototype.pushWoodToNid = function(){
+    this.goto(this.nid.x, this.nid.y, null)
+}
+
+Termite.prototype.hasHeap = function(){
+    var hasHeap = false;
+    this.heapInfos.forEach(function(id, currentHeap){
+        if (currentHeap.count > 0 && this.nid.id != id) {
+            hasHeap = true;
+            return false;
+        }
+    }, this);
+
+    return hasHeap;
+}
 
 Termite.prototype.findNextGotoPoint = function () {
     var index = ++this.gotoData.pathIndex;
@@ -393,17 +477,22 @@ function calculateAStarGrid(walls, world_width, world_height) {
     function isRectFull(rect, walls) {
         var x = rect.x + rect.width * 0.5;
         var y = rect.y + rect.height * 0.5;
-        for (var i in walls) {
-            var wall = walls[i];
-            if (x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
-                return true;
-            }
-        }
-        return false;
+        return isPointOfWall(x, y, walls);
     }
 
     var sortedCoords = findAllCoordsSorted();
     return makeGridFromSortedCoords(sortedCoords.x, sortedCoords.y);
+}
+
+function isPointOfWall(x, y, walls)
+{
+    for (var i in walls) {
+        var wall = walls[i];
+        if (x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function findPath(from, to, grid, minCaseSize) {
