@@ -274,14 +274,14 @@ Termite.prototype.moveToNext = function (dt) {
 
 Termite.prototype.draw = function (context) {
     context.fillStyle = this.hasWood ? "#f00" : "#000";
-    if(this.drawAStar)
-        context.fillStyle = "yellow";
+/*    if(this.drawAStar)
+        context.fillStyle = "yellow";*/
     context.strokeStyle = "#000";
     context.beginPath();
     context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-    if (this.drawAStar) {
+/*    if (this.drawAStar) {
         for (var i = 0; i < this.astar_grid.length; ++i) {
             var row = this.astar_grid[i];
             for (var j =0; j < row.length; ++j) {
@@ -309,7 +309,7 @@ Termite.prototype.draw = function (context) {
                 context.beginPath();
             }
         }
-    }
+    }*/
 };
 
 Termite.prototype.goto = function (x, y, callback) {
