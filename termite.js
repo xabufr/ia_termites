@@ -174,8 +174,14 @@ Termite.prototype.explore = function(){
     while (!isEmpty) {
         x = Math.random() * this.worldWidth;
         y = Math.random() * this.worldHeight;
+        var rect = {
+            x: x - this.boundingRadius,
+            y: y - this.boundingRadius,
+            width: this.boundingRadius,
+            height: this.boundingRadius
+        }
 
-        isEmpty = !isPointOfWall(x, y, this.walls);
+        isEmpty = !isRectInWalls(rect, this.walls);
     }
 
     this.goto(x, y, null);
@@ -401,6 +407,14 @@ function isPointInRect(x, y, rect) {
     if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
         return true;
     }
+}
+
+function isRectInWalls(rect, walls) {
+    return isPointOfWall(rect.x, rect.y, walls) ||
+        isPointOfWall(rect.x + rect.width, rect.y, walls) ||
+        isPointOfWall(rect.x, rect.y + rect.height, walls) ||
+        isPointOfWall(rect.x + rect.width, rect.y + rect.height, walls);
+
 }
 Termite.prototype.processWallPerception = function (perceivedAgent) {
     if (this.walls.get(perceivedAgent.id) === null) {
