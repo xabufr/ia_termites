@@ -50,14 +50,14 @@
             world = new World(canvasElement.width, canvasElement.height);
 
 
-            for (var i = 0; i < 30; i++) {
+            for (var i = 0; i < 10; i++) {
                 var woodHeap = new WoodHeap();
                 world.addAgent(woodHeap);
                 woodHeap.moveTo(canvasElement.width * Math.random(),
                                 canvasElement.height * Math.random());
             }
 
-            for (var i = 0; i < 6; i++) {
+            for (var i = 0; i < 7; i++) {
                 var wall = new Wall();
                 world.addAgent(wall);
                 wall.moveTo(canvasElement.width * Math.random(),
@@ -70,9 +70,9 @@
             world.draw(canvasContext);
 
             var termites = [];
-            for (var i = 0; i < 100; i++) {
+            for (var i = 0; i < 50; i++) {
                 var termite = new Termite(canvasElement.width, canvasElement.height);
-                termite.drawAStar = i === 0;
+                termite.drawAStar = false; //= i === 0;
                 world.addAgent(termite);
                 termite.moveTo(canvasElement.width * Math.random(),
                                 canvasElement.height * Math.random());
