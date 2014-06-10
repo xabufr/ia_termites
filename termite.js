@@ -504,15 +504,15 @@ function calculateAStarGrid(walls, world_width, world_height) {
     return makeGridFromSortedCoords(sortedCoords.x, sortedCoords.y);
 }
 
-function isPointOfWall(x, y, walls)
-{
-    for (var i in walls) {
-        var wall = walls[i];
+function isPointOfWall(x, y, walls) {
+    var full = false;
+    walls.forEach(function(id, wall) {
         if (x >= wall.x && x <= wall.x + wall.width && y >= wall.y && y <= wall.y + wall.height) {
-            return true;
+            full = true;
+            return false;
         }
-    }
-    return false;
+    });
+    return full;
 }
 
 function findPath(from, to, grid, minCaseSize) {
