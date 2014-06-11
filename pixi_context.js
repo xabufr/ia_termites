@@ -82,11 +82,16 @@ function PIXI_Context(width, height, canvas) {
         return dt;
     }
 
+    var fps_callback = null;
+
     function update() {
         requestAnimFrame(update);
         var time = window.performance.now() - frame_count_start;
-        if(time >= 1000) {
+        if(time >= 500) {
             fps = (frame_count / time) * 1000;
+            if(fps_callback != null) {
+                fps_callback();
+            }
             resetFrameCount();
         }
         ++frame_count;
@@ -120,6 +125,10 @@ function PIXI_Context(width, height, canvas) {
     this.toggleDebug = function() {
         debug = !debug;
     };
+
+    this.setFpsCallback = function(callback) {
+        fps_callback = callback;
+    }
 
     requestAnimFrame(update);
 }

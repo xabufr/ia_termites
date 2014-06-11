@@ -24,15 +24,14 @@
         var pixi_context = null;
         function init() {
             pixi_context = new PIXI_Context(600, 600, document.getElementById("canvas"));
+            pixi_context.setFpsCallback(function() {
+                document.getElementById("fps").innerHTML = Math.round(pixi_context.getFPS());
+            });
             pixi_context.reset({
                 heaps: 10,
                 walls: 5,
                 termites: 50
             });
-
-            window.setInterval(function() {
-               console.log(pixi_context.getFPS());
-            }, 1000);
         }
 
         function resetWorld() {
@@ -52,6 +51,9 @@
         <h3 class="panel-title">Settings</h3>
     </div>
     <div class="panel-body">
+        <div>
+            <h6>FPS: <span id="fps"></span></h6>
+        </div>
         <div>
             <input id="game_state" class="btn btn-primary" type="button" value="Play/Pause" onclick="pixi_context.togglePlay();"/>
             <input id="reset" class="btn btn-danger" type="button" value="Reset world" onclick="resetWorld();"/>
