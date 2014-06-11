@@ -17,10 +17,13 @@
         var world = null;
         var canvasElement = null;
         var canvasContext = null;
+        var play = true;
 
         var mainLoop = null;
         var lastUpdate = Date.now();
         var dt = 0;
+        var debugTermite = null;
+        var debug = false;
 
         function updateTime() {
             var now = Date.now();
@@ -37,7 +40,10 @@
                 console.log((frameCount / timeSinceLast) * 1000);
                 frameCount = timeSinceLast = 0;
             }
-            world.update(dt);
+            if(play) {
+                world.update(dt);
+            }
+            debugTermite.drawAStar = debug;
             canvasContext.clearRect(0, 0, canvasElement.width, canvasElement.height);
             world.draw(canvasContext);
         }
@@ -50,14 +56,16 @@
             world = new World(canvasElement.width, canvasElement.height);
 
 
-            for (var i = 0; i < 10; i++) {
+            var heaps = parseInt(document.getElementById("heaps").value);
+            for (var i = 0; i < heaps; i++) {
                 var woodHeap = new WoodHeap();
                 world.addAgent(woodHeap);
                 woodHeap.moveTo(canvasElement.width * Math.random(),
                                 canvasElement.height * Math.random());
             }
 
-            for (var i = 0; i < 7; i++) {
+            var walls = parseInt(document.getElementById("walls").value);
+            for (var i = 0; i < walls; i++) {
                 var wall = new Wall();
                 world.addAgent(wall);
                 wall.moveTo(canvasElement.width * Math.random(),
@@ -69,14 +77,15 @@
 
             world.draw(canvasContext);
 
-            var termites = [];
-            for (var i = 0; i < 50; i++) {
+            var termites = parseInt(document.getElementById("termites").value);
+            for (var i = 0; i < termites; i++) {
                 var termite = new Termite(canvasElement.width, canvasElement.height);
-                termite.drawAStar = false; //= i === 0;
+                if(i === 0) {
+                    debugTermite = termite;
+                }
                 world.addAgent(termite);
                 termite.moveTo(canvasElement.width * Math.random(),
                                 canvasElement.height * Math.random());
-                termites.push(termite);
             }
 
             world.correctWalls();
@@ -92,11 +101,32 @@
             mainLoop = setInterval(update, 1000 / fps);
             update();
         }
+
+        function changeState() {
+            play = !play;
+        }
+
+        function resetWorld() {
+            if(mainLoop != null) {
+                clearInterval(mainLoop);
+            }
+            init();
+        }
+        function changeDebug() {
+            debug = !debug;
+        }
     </script>
 </head>
 <body onload="init()">
 <canvas id="canvas" width="600" height="600" style="background-color:#eee; display:inline-block">
-
 </canvas>
+<div>
+    <input id="game_state" type="button" value="Play/Pause" onclick="changeState();">
+    <input id="reset" type="button" value="Reset world" onclick="resetWorld();">
+    <input type="button" id="debug" value="Toggle debug" onclick="changeDebug();"/>
+    <label for="termites">Termites</label><input type="number" max="200" min="1" id="termites" value="50"/>
+    <label for="walls">Murs</label><input type="number" max="20" min="1" id="walls" value="6"/>
+    <label for="heaps">Tas de bois</label><input type="number" max="50" min="1" id="heaps" value="6"/>
+</div>
 </body>
 </html>
