@@ -437,6 +437,8 @@ function negociateNid(perceivedAgent) {
         }
         if (added) {
             this.nid.version = currentDate();
+        } else {
+            this.nid.version = otherNid.version;
         }
     }
 }
