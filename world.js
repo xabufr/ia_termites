@@ -38,6 +38,7 @@ World.prototype.clearDeadAgents = function () {
         for (var i = startIndex; i < this.agents.length; i++) {
             var agent = this.agents[i];
             if (agent.dead) {
+                agent.delete();
                 this.agents.splice(this.agents.indexOf(agent), 1);
                 deadFound = true;
                 startIndex = i;
@@ -215,3 +216,8 @@ World.prototype.correctWalls = function () {
     }
 };
 
+World.prototype.init = function() {
+    for(var i=0;i<this.agents.length;++i) {
+        this.agents[i].init();
+    }
+};

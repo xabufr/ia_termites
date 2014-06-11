@@ -55,8 +55,13 @@ function makeSet() {
 function currentDate() {
     return window.performance.now();
 }
-function Termite(world_width, world_height) {
+function Termite(world_width, world_height, pixi_context) {
     Agent.call(this);
+
+    this.graphics = new PIXI.Graphics()
+
+    pixi_context.getStage().addChild(this.graphics);
+
     this.typeId = "termite";
     this.boundingRadius = 3;
     this.perceptionRadius = 50;
@@ -79,12 +84,20 @@ function Termite(world_width, world_height) {
     this.worldHeight = world_height;
 
     this.drawAStar = false;
+    this.debugGrid = null;
 
     this.gotoData = null;
     this.lastWoodHeapCollision = null;
     this.lastPerceived = [];
     this.initExpertSystem();
 }
+
+Termite.prototype.init = function() {
+    this.graphics.lineStyle(1, 0x000000, 1);
+    this.graphics.beginFill(0xffffff, 1);
+    this.graphics.drawCircle(0, 0, this.boundingRadius);
+    this.graphics.endFill();
+};
 
 Termite.prototype.initExpertSystem = function(){
     this.expertSystem = new ExpertSystem();
@@ -297,41 +310,45 @@ Termite.prototype.moveToNext = function (dt) {
 };
 
 Termite.prototype.draw = function (context) {
-    context.fillStyle = this.hasWood ? "#f00" : "#000";
-    if(this.drawAStar)
-        context.fillStyle = "yellow";
-    context.strokeStyle = "#000";
-    context.beginPath();
-    context.arc(this.x, this.y, this.boundingRadius, 0, 2 * Math.PI);
-    context.fill();
-    context.stroke();
-    if (this.drawAStar) {
-        for (var i = 0; i < this.astar_grid.length; ++i) {
-            var row = this.astar_grid[i];
-            for (var j =0; j < row.length; ++j) {
-                var rect = row[j];
-                context.beginPath();
-                context.fillStyle = "rgba(255, 0, 0, 0.15)";
-                context.rect(rect.x, rect.y, rect.width, rect.height);
-                if (rect.full) {
-                    context.fill();
-                }
-                context.stroke();
-                context.fillStyle = "blue";
-                context.fillText(i + " " + j, rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height);
-            }
+    this.graphics.position.x = this.x;
+    this.graphics.position.y = this.y;
+    function generateGridGraphics() {
+        this.debugGrid.clear();
+        this.debugGrid.visible = true;
+        this.debugGrid.lineStyle(1, 0, 1);
+        for(var i = 0; i < this.astar_grid.length; ++i) {
+            var rect = this.astar_grid[i][0];
+            this.debugGrid.moveTo(rect.x, 0);
+            this.debugGrid.lineTo(rect.x, this.worldHeight);
         }
-        if (this.gotoData !== null) {
-            var paths = this.gotoData.path;
-            for (var i = 0; i < paths.length; ++i) {
-                var path = paths[i];
-                var rect = path.node;
-                context.beginPath();
-                context.fillStyle = "rgba(0, 255, 0, 0.15)";
-                context.rect(rect.x, rect.y, rect.width, rect.height);
-                context.fill();
-                context.beginPath();
-            }
+        for(var i = 0; i < this.astar_grid[0].length; ++i) {
+            var rect = this.astar_grid[0][i];
+            this.debugGrid.moveTo(0, rect.y);
+            this.debugGrid.lineTo(this.worldWidth, rect.y);
+        }
+        this.debugGrid.beginFill(0x00ff00, 0.25);
+        for(var i = 0; i < this.gotoData.path.length; ++i) {
+            var node = this.gotoData.path[i].node;
+            this.debugGrid.drawRect(node.x, node.y, node.width, node.height);
+        }
+        this.debugGrid.endFill();
+    }
+
+    if(this.drawAStar) {
+        this.graphics.tint = 0xFFFF00;
+        if(this.debugGrid == null) {
+            this.debugGrid = new PIXI.Graphics();
+            pixi_context.getStage().addChild(this.debugGrid);
+        }
+        generateGridGraphics.call(this);
+    } else {
+        if(this.debugGrid != null) {
+            this.debugGrid.visible = false;
+        }
+        if (this.hasWood) {
+            this.graphics.tint = 0xff0000;
+        } else {
+            this.graphics.tint = 0xffffff;
         }
     }
 };
