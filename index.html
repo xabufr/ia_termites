@@ -48,6 +48,16 @@
             world.draw(canvasContext);
         }
 
+        function initHTML() {
+            function addWoodHeap(event) {
+                var woodHeap = new WoodHeap();
+                woodHeap.x = event.clientX - canvasElement.offsetLeft;
+                woodHeap.y = event.clientY - canvasElement.offsetTop;
+                world.addAgent(woodHeap)
+            }
+            canvasElement = document.getElementById("canvas");
+            canvasElement.addEventListener('click', addWoodHeap, false);
+        }
         function init() {
 
             canvasElement = document.getElementById("canvas");
@@ -89,13 +99,6 @@
             }
 
             world.correctWalls();
-            canvasElement.addEventListener('click', function (event) {
-                var woodHeap = new WoodHeap();
-                woodHeap.x = event.clientX - canvasElement.offsetLeft;
-                woodHeap.y = event.clientY - canvasElement.offsetTop;
-                world.addAgent(woodHeap)
-            }, false);
-
 
             var fps = 60;
             mainLoop = setInterval(update, 1000 / fps);
@@ -117,7 +120,7 @@
         }
     </script>
 </head>
-<body onload="init()">
+<body onload="initHTML(); init();">
 <canvas id="canvas" width="600" height="600" style="background-color:#eee; display:inline-block">
 </canvas>
 <div>
