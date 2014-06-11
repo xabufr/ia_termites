@@ -25,6 +25,7 @@ function WoodHeap(pixi_context) {
 WoodHeap.prototype.init = function() {
     this.textCount.position.x = this.x;
     this.textCount.position.y = this.y;
+    this.updateWoodCount();
 };
 
 WoodHeap.prototype.updateRadius = function() {

@@ -20,9 +20,22 @@ function PIXI_Context(width, height, canvas) {
     }
     resetFrameCount();
 
+    this.getWorld = function() {
+        return world;
+    };
+
     this.reset = function(parameters) {
         stage = new PIXI.Stage;
         stage.setBackgroundColor(0xaaaaaa);
+        var that = this;
+        stage.click = function(data) {
+            var newHeap = new WoodHeap(that);
+            var mousePos = that.getStage().getMousePosition();
+            newHeap.x = mousePos.x;
+            newHeap.y = mousePos.y;
+            newHeap.init();
+            that.getWorld().addAgent(newHeap);
+        };
 
         world = new World(width, height);
 
