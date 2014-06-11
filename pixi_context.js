@@ -82,16 +82,16 @@ function PIXI_Context(width, height, canvas) {
         return dt;
     }
 
-    var fps_callback = null;
+    var stats = null;
 
     function update() {
+        if(stats != null) {
+            stats.begin();
+        }
         requestAnimFrame(update);
         var time = window.performance.now() - frame_count_start;
         if(time >= 500) {
             fps = (frame_count / time) * 1000;
-            if(fps_callback != null) {
-                fps_callback();
-            }
             resetFrameCount();
         }
         ++frame_count;
@@ -105,6 +105,9 @@ function PIXI_Context(width, height, canvas) {
         debug_termite.drawAStar = debug;
         world.draw(renderer);
         renderer.render(stage);
+        if(stats != null) {
+            stats.end();
+        }
     }
 
     this.getTexture = function (image) {
@@ -126,8 +129,8 @@ function PIXI_Context(width, height, canvas) {
         debug = !debug;
     };
 
-    this.setFpsCallback = function(callback) {
-        fps_callback = callback;
+    this.setStats = function(newstats) {
+        stats = newstats;
     }
 
     requestAnimFrame(update);

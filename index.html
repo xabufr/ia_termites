@@ -20,18 +20,22 @@
     <script type="text/javascript" src="./random.js"></script>
     <script type="text/javascript" src="./lib/pixi.js"></script>
     <script type="text/javascript" src="./pixi_context.js"></script>
+    <script type="text/javascript" src="./lib/stats.min.js"></script>
     <script language="javascript">
         var pixi_context = null;
         function init() {
             pixi_context = new PIXI_Context(600, 600, document.getElementById("canvas"));
-            pixi_context.setFpsCallback(function() {
-                document.getElementById("fps").innerHTML = Math.round(pixi_context.getFPS());
-            });
+
+            var stats = new Stats();
+            stats.setMode(0);
+            pixi_context.setStats(stats);
+
             pixi_context.reset({
                 heaps: 10,
                 walls: 5,
                 termites: 50
             });
+            document.getElementById("fps").appendChild(stats.domElement);
         }
 
         function resetWorld() {
