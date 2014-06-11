@@ -1,135 +1,177 @@
-<!DOCTYPE html>
+<! DOCTYPE html>
 <html>
-<head>
-    <script type="text/javascript" src="./vector.js"></script>
-    <script type="text/javascript" src="./world.js"></script>
-    <script type="text/javascript" src="./agent.js"></script>
-    <script type="text/javascript" src="./expert_system/rule.js"></script>
-    <script type="text/javascript" src="./expert_system/fact.js"></script>
-    <script type="text/javascript" src="./expert_system/engine.js"></script>
-    <script type="text/javascript" src="./expert_system/expert_system.js"></script>
-    <script type="text/javascript" src="./termite.js"></script>
-    <script type="text/javascript" src="./wood_heap.js"></script>
-    <script type="text/javascript" src="./wall.js"></script>
-    <script type="text/javascript" src="./world_solver.js"></script>
-    <script type="text/javascript" src="./random.js"></script>
-    <script language="javascript">
-        var world = null;
-        var canvasElement = null;
-        var canvasContext = null;
-        var play = true;
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" />
+		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+		<script src="https://konami-js.googlecode.com/files/konami.1.3.3.js"></script>
+        <script type="text/javascript" src="./vector.js"></script>
+        <script type="text/javascript" src="./world.js"></script>
+        <script type="text/javascript" src="./agent.js"></script>
+        <script type="text/javascript" src="./expert_system/rule.js"></script>
+        <script type="text/javascript" src="./expert_system/fact.js"></script>
+        <script type="text/javascript" src="./expert_system/engine.js"></script>
+        <script type="text/javascript" src="./expert_system/expert_system.js"></script>
+        <script type="text/javascript" src="./termite.js"></script>
+        <script type="text/javascript" src="./wood_heap.js"></script>
+        <script type="text/javascript" src="./wall.js"></script>
+        <script type="text/javascript" src="./world_solver.js"></script>
+        <script type="text/javascript" src="./random.js"></script>
+        <script language="javascript">
+            var world = null;
+            var canvasElement = null;
+            var canvasContext = null;
+            var play = true;
 
-        var mainLoop = null;
-        var lastUpdate = Date.now();
-        var dt = 0;
-        var debugTermite = null;
-        var debug = false;
+            var mainLoop = null;
+            var lastUpdate = Date.now();
+            var dt = 0;
+            var debugTermite = null;
+            var debug = false;
 
-        function updateTime() {
-            var now = Date.now();
-            dt = now - lastUpdate;
-            lastUpdate = now;
-        }
-        var timeSinceLast = 0;
-        var frameCount = 0;
-        function update() {
-            updateTime();
-            timeSinceLast += dt;
-            ++frameCount;
-            if(timeSinceLast >= 1000) {
-                console.log((frameCount / timeSinceLast) * 1000);
-                frameCount = timeSinceLast = 0;
+            function updateTime() {
+                var now = Date.now();
+                dt = now - lastUpdate;
+                lastUpdate = now;
             }
-            if(play) {
-                world.update(dt);
-            }
-            debugTermite.drawAStar = debug;
-            canvasContext.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            world.draw(canvasContext);
-        }
-
-        function initHTML() {
-            function addWoodHeap(event) {
-                var woodHeap = new WoodHeap();
-                woodHeap.x = event.clientX - canvasElement.offsetLeft;
-                woodHeap.y = event.clientY - canvasElement.offsetTop;
-                world.addAgent(woodHeap)
-            }
-            canvasElement = document.getElementById("canvas");
-            canvasElement.addEventListener('click', addWoodHeap, false);
-        }
-        function init() {
-
-            canvasElement = document.getElementById("canvas");
-            canvasContext = this.canvasElement.getContext("2d");
-
-            world = new World(canvasElement.width, canvasElement.height);
-
-
-            var heaps = parseInt(document.getElementById("heaps").value);
-            for (var i = 0; i < heaps; i++) {
-                var woodHeap = new WoodHeap();
-                world.addAgent(woodHeap);
-                woodHeap.moveTo(canvasElement.width * Math.random(),
-                                canvasElement.height * Math.random());
-            }
-
-            var walls = parseInt(document.getElementById("walls").value);
-            for (var i = 0; i < walls; i++) {
-                var wall = new Wall();
-                world.addAgent(wall);
-                wall.moveTo(canvasElement.width * Math.random(),
-                                canvasElement.height * Math.random());
-            }
-
-            var solver = new WorldSolver(world);
-            solver.solve();
-
-            world.draw(canvasContext);
-
-            var termites = parseInt(document.getElementById("termites").value);
-            for (var i = 0; i < termites; i++) {
-                var termite = new Termite(canvasElement.width, canvasElement.height);
-                if(i === 0) {
-                    debugTermite = termite;
+            var timeSinceLast = 0;
+            var frameCount = 0;
+            function update() {
+                updateTime();
+                timeSinceLast += dt;
+                ++frameCount;
+                if(timeSinceLast >= 1000) {
+                    console.log((frameCount / timeSinceLast) * 1000);
+                    frameCount = timeSinceLast = 0;
                 }
-                world.addAgent(termite);
-                termite.moveTo(canvasElement.width * Math.random(),
-                                canvasElement.height * Math.random());
+                if(play) {
+                    world.update(dt);
+                }
+                debugTermite.drawAStar = debug;
+                canvasContext.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                world.draw(canvasContext);
             }
 
-            world.correctWalls();
-
-            var fps = 60;
-            mainLoop = setInterval(update, 1000 / fps);
-            update();
-        }
-
-        function changeState() {
-            play = !play;
-        }
-
-        function resetWorld() {
-            if(mainLoop != null) {
-                clearInterval(mainLoop);
+            function initHTML() {
+                function addWoodHeap(event) {
+                    var woodHeap = new WoodHeap();
+                    woodHeap.x = event.clientX - canvasElement.offsetLeft;
+                    woodHeap.y = event.clientY - canvasElement.offsetTop;
+                    world.addAgent(woodHeap)
+                }
+                canvasElement = document.getElementById("canvas");
+                canvasElement.addEventListener('click', addWoodHeap, false);
             }
-            init();
-        }
-        function changeDebug() {
-            debug = !debug;
-        }
-    </script>
-</head>
-<body onload="initHTML(); init();">
-<canvas id="canvas" width="600" height="600" style="background-color:#eee; display:inline-block">
-</canvas>
-<div>
-    <input id="game_state" type="button" value="Play/Pause" onclick="changeState();">
-    <input id="reset" type="button" value="Reset world" onclick="resetWorld();">
-    <input type="button" id="debug" value="Toggle debug" onclick="changeDebug();"/>
-    <label for="termites">Termites</label><input type="number" max="200" min="1" id="termites" value="50"/>
-    <label for="walls">Murs</label><input type="number" max="20" min="1" id="walls" value="6"/>
-    <label for="heaps">Tas de bois</label><input type="number" max="50" min="1" id="heaps" value="6"/>
-</div>
-</body>
+            function init() {
+
+                canvasElement = document.getElementById("canvas");
+                canvasContext = this.canvasElement.getContext("2d");
+
+                world = new World(canvasElement.width, canvasElement.height);
+
+
+                var heaps = parseInt(document.getElementById("heaps").value);
+                for (var i = 0; i < heaps; i++) {
+                    var woodHeap = new WoodHeap();
+                    world.addAgent(woodHeap);
+                    woodHeap.moveTo(canvasElement.width * Math.random(),
+                                    canvasElement.height * Math.random());
+                }
+
+                var walls = parseInt(document.getElementById("walls").value);
+                for (var i = 0; i < walls; i++) {
+                    var wall = new Wall();
+                    world.addAgent(wall);
+                    wall.moveTo(canvasElement.width * Math.random(),
+                                    canvasElement.height * Math.random());
+                }
+
+                var solver = new WorldSolver(world);
+                solver.solve();
+
+                world.draw(canvasContext);
+
+                var termites = parseInt(document.getElementById("termites").value);
+                for (var i = 0; i < termites; i++) {
+                    var termite = new Termite(canvasElement.width, canvasElement.height);
+                    if(i === 0) {
+                        debugTermite = termite;
+                    }
+                    world.addAgent(termite);
+                    termite.moveTo(canvasElement.width * Math.random(),
+                                    canvasElement.height * Math.random());
+                }
+
+                world.correctWalls();
+
+                var fps = 60;
+                mainLoop = setInterval(update, 1000 / fps);
+                update();
+            }
+
+            function changeState() {
+                play = !play;
+            }
+
+            function resetWorld() {
+                if(mainLoop != null) {
+                    clearInterval(mainLoop);
+                }
+                init();
+            }
+            function changeDebug() {
+                debug = !debug;
+            }
+        </script>
+	</head>
+	<body onLoad="init();" style="background-image: url('http://static.panoramio.com/photos/large/5671969.jpg'); background-size: cover;">
+		<nav class="navbar navbar-inverse" role="navigation">
+		  	<div class="container-fluid">
+		    	<div class="navbar-header">
+		      		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+		        		<span class="sr-only">Toggle navigation</span>
+		        		<span class="icon-bar"></span>
+		        		<span class="icon-bar"></span>
+		        		<span class="icon-bar"></span>
+		      		</button>
+		      		<a class="navbar-brand" href="#">Termite V2.0</a>
+		    	</div>
+		  	</div>
+		</nav>
+		<div class="row" style="max-width: 100%">
+		    <div class="panel panel-default col-md-4 col-md-offset-2" style="min-height: 466px; background-color: rgba(255,255,255,0.6); border-color: black;">
+	  			<div class="panel-body" style="text-align: center">
+					<canvas id="canvas" width="300" height="400">
+						alternate content
+					</canvas>
+				</div>
+			</div>
+			<div class="panel panel-default col-md-4" style="min-height: 466px; background-color: rgba(255,255,255,0.6); border-color: black;">
+				<div class="panel-heading" style="background-color: rgba(0,0,0,0);">
+					<h3 class="panel-title">Settings</h3>
+				</div>
+	  			<div class="panel-body">
+                    <div>
+                        <input id="game_state" class="btn btn-primary" type="button" value="Play/Pause" onclick="changeState();"/>
+                        <input id="reset" class="btn btn-danger" type="button" value="Reset world" onclick="resetWorld();"/>
+                        <input type="button" class="btn btn-primary" id="debug" value="Toggle debug" onclick="changeDebug();"/>
+                    </div>
+                    <br/>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="background-color: transparent"><label for="termites">Termites</label></span>
+                        <input type="number" id="termites" min="1" max="200" class="form-control" style="background-color: transparent; color: blue" value="50"/>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="background-color: transparent"><label for="walls">Murs</label></label></span>
+                        <input type="number" id="walls" min="1" max="20" class="form-control" style="background-color: transparent; color: blue" value="6"/>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" style="background-color: transparent"><label for="heaps">Tas de bois</label></span>
+                        <input type="number" id="heaps" min="1" max="50" class="form-control" style="background-color: transparent; color: blue" value="6"/>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
