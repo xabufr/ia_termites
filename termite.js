@@ -196,8 +196,8 @@ Termite.prototype.explore = function(){
     var y = 0;
 
     while (!isEmpty) {
-        x = Math.random() * this.worldWidth;
-        y = Math.random() * this.worldHeight;
+        x = this.boundingRadius + Math.random() * (this.worldWidth - this.boundingRadius);
+        y = this.boundingRadius + Math.random() * (this.worldHeight - this.boundingRadius);
         var rect = {
             x: x - this.boundingRadius - 1,
             y: y - this.boundingRadius - 1,
