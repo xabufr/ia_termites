@@ -52,6 +52,36 @@ function makeSet() {
     };
 }
 
+function makeObjectSet(hashFunction) {
+    return {
+        data: {},
+        contains: function(key) {
+            return hashFunction(key) in this.data;
+        },
+        get: function(key) {
+            var data = this.data[hashFunction(key)];
+            if(data === undefined) {
+                return null;
+            }
+            return  data;
+        },
+        set: function(key, object) {
+            this.data[hashFunction(key)] = object;
+        },
+        forEach: function(callback, that) {
+            var keys = Object.keys(this.data);
+            for(var i = 0; i < keys; ++i) {
+                var value = this.data[keys[i]];
+                if(that != null) {
+                    callback.call(that, keys[i], value);
+                } else {
+                    callback.call(value, keys[i], value);
+                }
+            }
+        }
+    };
+}
+
 function currentDate() {
     return window.performance.now();
 }
@@ -124,7 +154,10 @@ Termite.prototype.perceive = function(){
 }
 
 function updateHeapInfo(object, heapInfo) {
-    object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: currentDate()});
+    if(!object.contains(heapInfo)) {
+        object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: currentDate()});
+        object.version = currentDate();
+    }
 }
 
 Termite.prototype.act = function(conclusions){
@@ -500,12 +533,21 @@ Termite.prototype.processPerception = function (perceivedAgent) {
 };
 
 function exchangeHeapInfos(perceivedAgent) {
-    perceivedAgent.heapInfos.forEach(function (key, heapInfo) {
-        var thisHeapInfo = this.heapInfos.get(key);
-        if (thisHeapInfo === null || thisHeapInfo.date < heapInfo.date) {
-            this.heapInfos.set(key, heapInfo);
+    if(perceivedAgent.heapInfos.version > this.heapInfos.version) {
+        var added = false;
+        perceivedAgent.heapInfos.forEach(function (key, heapInfo) {
+            var thisHeapInfo = this.heapInfos.get(key);
+            if (thisHeapInfo === null || thisHeapInfo.date < heapInfo.date) {
+                this.heapInfos.set(key, heapInfo);
+                added = true;
+            }
+        }, this);
+        if(added || this.heapInfos.keys().length > perceivedAgent.heapInfos.keys().length) {
+            this.heapInfos.version = currentDate();
+        } else {
+            this.heapInfos.version = perceivedAgent.heapInfos.version;
         }
-    }, this);
+    }
 }
 
 Termite.prototype.addWall = function (wall) {
@@ -632,9 +674,14 @@ function findPath(from, to, grid, minCaseSize) {
     var nodesCache = [];
     var beginNode = makeNode(from.x, from.y);
 
-    var fScore = makeSet();
-    var gScore = makeSet();
-    var cameFrom = makeSet();
+    var fScore = makeObjectSet(hashNode);
+
+    function hashNode(o) {
+        return o.x + "-" + o.y;
+    }
+
+    var gScore = makeObjectSet(hashNode);
+    var cameFrom = makeObjectSet(hashNode);
 
     openSet.push(beginNode);
     gScore.set(beginNode, 0);

@@ -1,6 +1,9 @@
-function PIXI_Context(width, height, canvas) {
+function PIXI_Context(canvas) {
+    var width = canvas.scrollWidth;
+    var height = canvas.scrollHeight;
+//    height = width = 600;
     var stage = new PIXI.Stage;
-    var renderer = new PIXI.WebGLRenderer(width, height, canvas);
+    var renderer = new PIXI.autoDetectRenderer(width, height, canvas);
 
     var world = null;
     var debug = false;
