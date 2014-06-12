@@ -65,6 +65,7 @@ WoodHeap.prototype.draw = function(context) {
 
 WoodHeap.prototype.delete = function() {
     pixi_context.getStage().removeChild(this.graphics);
+    pixi_context.getStage().removeChild(this.textCount);
 };
 
 WoodHeap.prototype.processCollision = function(collidedAgent) {
