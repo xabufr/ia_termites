@@ -68,14 +68,19 @@ function makeObjectSet(hashFunction) {
         set: function(key, object) {
             this.data[hashFunction(key)] = object;
         },
-        forEach: function(callback, that) {
+        forEach: function(callback, caller) {
             var keys = Object.keys(this.data);
-            for(var i = 0; i < keys; ++i) {
-                var value = this.data[keys[i]];
-                if(that != null) {
-                    callback.call(that, keys[i], value);
+            for(var i = 0; i < keys.length; ++i) {
+                var key = keys[i];
+                var value = this.data[ key];
+                var result;
+                if(caller != null) {
+                    result = callback.call(caller, key, value);
                 } else {
-                    callback.call(value, keys[i], value);
+                    result = callback(key, value);
+                }
+                if(result === false) {
+                    return;
                 }
             }
         }
@@ -88,7 +93,7 @@ function currentDate() {
 function Termite(world_width, world_height, pixi_context) {
     Agent.call(this);
 
-    this.graphics = new PIXI.Graphics()
+    this.graphics = new PIXI.Graphics();
 
     pixi_context.getStage().addChild(this.graphics);
 
@@ -150,7 +155,7 @@ Termite.prototype.perceive = function(){
     this.expertSystem.setFactValid('hasNid', (this.nid !== null));
     this.expertSystem.setFactValid('isInNid', (this.nid !== null && this.lastWoodHeapCollision !== null && this.nid.id === this.lastWoodHeapCollision.id));
     this.expertSystem.setFactValid('isNotInNid', (this.nid !== null && this.lastWoodHeapCollision !== null && this.nid.id !== this.lastWoodHeapCollision.id));
-}
+};
 
 function updateHeapInfo(object, heapInfo) {
     if(this.nid != null && this.nid.id != heapInfo.id && this.nid.count + this.nid.termites.length <= heapInfo.woodCount) {
@@ -177,40 +182,28 @@ function updateHeapInfo(object, heapInfo) {
 }
 
 Termite.prototype.act = function(conclusions){
-
-    for (var index in conclusions)
-    {
-        switch (conclusions[index])
-        {
-            case 'searchWood':
-                this.searchWood();
-                break;
-            case 'explore':
-                this.explore();
-                break;
-            case 'goToNid':
-                this.goToNid();
-                break;
-            case 'pushWood':
-            {
-                this.lastWoodHeapCollision.addWood();
-                this.hasWood = false;
-                this.lastWoodHeapCollision = null;
+    for (var i=0; i < conclusions.length; ++i) {
+        var conclusion = conclusions[i];
+        if (conclusion === 'searchWood') {
+            this.searchWood();
+        } else if (conclusion === 'explore') {
+            this.explore();
+        } else if (conclusion === 'goToNid') {
+            this.goToNid();
+        } else if (conclusion === 'pushWood') {
+            this.lastWoodHeapCollision.addWood();
+            this.hasWood = false;
+            this.lastWoodHeapCollision = null;
+        } else if (conclusion === 'pullWood') {
+            if (this.lastWoodHeapCollision.woodCount > 0) {
+                this.lastWoodHeapCollision.takeWood();
+                updateHeapInfo.call(this, this.heapInfos, this.lastWoodHeapCollision);
+                this.hasWood = true;
             }
-                break;
-            case 'pullWood':
-            {
-                if (this.lastWoodHeapCollision.woodCount > 0){
-                    this.lastWoodHeapCollision.takeWood();
-                    updateHeapInfo.call(this, this.heapInfos, this.lastWoodHeapCollision);
-                    this.hasWood = true;
-                }
-            }
-                break;
         }
     }
     this.lastWoodHeapCollision = null;
-}
+};
 
 Termite.prototype.updateRandomDirection = function () {
     this.direction = new Vect(Math.random() * 2 - 1, Math.random() * 2 - 1);
@@ -265,7 +258,7 @@ Termite.prototype.explore = function(){
             y: y - this.boundingRadius - 1,
             width: this.boundingRadius * 2 + 2,
             height: this.boundingRadius * 2 + 2
-        }
+        };
 
         isEmpty = !isRectInWalls(rect, this.walls);
     }
@@ -274,8 +267,6 @@ Termite.prototype.explore = function(){
 };
 
 Termite.prototype.searchWood = function(){
-    var heap = null;
-
     var heaps = {};
     this.heapInfos.forEach(function(id, currentHeap){
         if (currentHeap.count <= 0 || this.nid.id === id)
@@ -294,7 +285,7 @@ Termite.prototype.goToNid = function(){
     if(this.gotoData === null || this.nid.position.x != this.gotoData.destination.x || this.nid.position.y != this.gotoData.destination.y) {
         this.goto(this.nid.position.x, this.nid.position.y, null)
     }
-}
+};
 
 Termite.prototype.hasHeap = function(){
     var hasHeap = false;
@@ -306,7 +297,7 @@ Termite.prototype.hasHeap = function(){
     }, this);
 
     return hasHeap;
-}
+};
 
 Termite.prototype.findNextGotoPoint = function () {
     var index = ++this.gotoData.pathIndex;
@@ -314,17 +305,10 @@ Termite.prototype.findNextGotoPoint = function () {
         this.gotoData.nextPoint = this.gotoData.destination;
     } else {
         var node = this.gotoData.path[index];
-        var point = this.gotoData.nextPoint = {
+        this.gotoData.nextPoint = {
             x: node.node.x + node.node.width * 0.5,
             y: node.node.y + node.node.height * 0.5
         };
-        var nextNode = this.gotoData.path[index + 1];
-        var rel = {
-            x: nextNode.x - node.x,
-            y: nextNode.y - node.y
-        };
-        //point.x += rel.x * 0.5 * node.node.width;
-        //point.y += rel.y * 0.5 * node.node.height;
     }
 };
 function square(a) {
@@ -361,26 +345,29 @@ Termite.prototype.moveToNext = function (dt) {
 Termite.prototype.draw = function (context) {
     this.graphics.position.x = this.x;
     this.graphics.position.y = this.y;
-    function generateGridGraphics() {
-        this.debugGrid.clear();
-        this.debugGrid.visible = true;
-        this.debugGrid.lineStyle(1, 0, 1);
-        for(var i = 0; i < this.astar_grid.length; ++i) {
-            var rect = this.astar_grid[i][0];
-            this.debugGrid.moveTo(rect.x, 0);
-            this.debugGrid.lineTo(rect.x, this.worldHeight);
+    function generateGridGraphics(debugGrid, astarGrid, gotoData, worldWidth, worldHeight) {
+        worldWidth = worldWidth || this.worldWidth;
+        worldHeight = worldHeight || this.worldHeight;
+        debugGrid.clear();
+        debugGrid.visible = true;
+        debugGrid.lineStyle(1, 0, 1);
+        var i, rect;
+        for(i = 0; i < astarGrid.length; ++i) {
+            rect = astarGrid[i][0];
+            debugGrid.moveTo(rect.x, 0);
+            debugGrid.lineTo(rect.x, worldHeight);
         }
-        for(var i = 0; i < this.astar_grid[0].length; ++i) {
-            var rect = this.astar_grid[0][i];
-            this.debugGrid.moveTo(0, rect.y);
-            this.debugGrid.lineTo(this.worldWidth, rect.y);
+        for(i = 0; i < astarGrid[0].length; ++i) {
+            rect = astarGrid[0][i];
+            debugGrid.moveTo(0, rect.y);
+            debugGrid.lineTo(worldWidth, rect.y);
         }
-        this.debugGrid.beginFill(0x00ff00, 0.25);
-        for(var i = 0; i < this.gotoData.path.length; ++i) {
-            var node = this.gotoData.path[i].node;
-            this.debugGrid.drawRect(node.x, node.y, node.width, node.height);
+        debugGrid.beginFill(0x00ff00, 0.25);
+        for(i = 0; i < gotoData.path.length; ++i) {
+            var node = gotoData.path[i].node;
+            debugGrid.drawRect(node.x, node.y, node.width, node.height);
         }
-        this.debugGrid.endFill();
+        debugGrid.endFill();
     }
 
     if(this.drawAStar) {
@@ -389,7 +376,7 @@ Termite.prototype.draw = function (context) {
             this.debugGrid = new PIXI.Graphics();
             pixi_context.getStage().addChild(this.debugGrid);
         }
-        generateGridGraphics.call(this);
+        generateGridGraphics(this.debugGrid, this.astar_grid, this.gotoData, this.worldWidth, this.worldHeight);
     } else {
         if(this.debugGrid != null) {
             this.debugGrid.visible = false;
@@ -446,24 +433,24 @@ function worldToGrid(x, y, grid) {
 }
 
 function negociateNid(perceivedAgent) {
-    function setTermiteNid(otherNid) {
-        this.nid.id = otherNid.id;
-        this.nid.termites = [this.id];
-        this.nid.position = {
+    function setTermiteNid(otherNid, myNid, myId) {
+        myNid.id = otherNid.id;
+        myNid.termites = [myId];
+        myNid.position = {
             x: otherNid.position.x,
             y: otherNid.position.y
         };
-        this.nid.count = otherNid.count;
-        this.nid.version = currentDate();
+        myNid.count = otherNid.count;
+        myNid.version = currentDate();
         for (var idx = 0; idx < otherNid.termites.length; ++idx) {
-            this.nid.termites.push(otherNid.termites[idx]);
+            myNid.termites.push(otherNid.termites[idx]);
         }
     }
 
     var otherNid = perceivedAgent.nid;
     if (otherNid !== null && this.nid === null) {
         this.nid = {};
-        setTermiteNid.call(this, otherNid);
+        setTermiteNid(otherNid, this.nid, this.id);
         return;
     }
     else if (otherNid === null || this.nid === null) {
@@ -473,7 +460,7 @@ function negociateNid(perceivedAgent) {
 
     if (otherNid.id != this.nid.id) {
         if (otherNid.termites.length + otherNid.count >= this.nid.termites.length + this.nid.count) {
-            setTermiteNid.call(this, otherNid);
+            setTermiteNid(otherNid, this.nid, this.id);
         }
     } else if (this.nid.version < otherNid.version) {
         var otherTermites = perceivedAgent.nid.termites;
