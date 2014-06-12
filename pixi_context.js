@@ -1,7 +1,6 @@
 function PIXI_Context(canvas) {
     var width = canvas.scrollWidth;
     var height = canvas.scrollHeight;
-//    height = width = 600;
     var stage = new PIXI.Stage;
     var renderer = new PIXI.autoDetectRenderer(width, height, canvas);
 
@@ -31,7 +30,7 @@ function PIXI_Context(canvas) {
         stage = new PIXI.Stage;
         stage.setBackgroundColor(0xaaaaaa);
         var that = this;
-        stage.click = function(data) {
+        stage.mouseup = function(data) {
             var newHeap = new WoodHeap(that);
             var mousePos = that.getStage().getMousePosition();
             newHeap.x = mousePos.x;
