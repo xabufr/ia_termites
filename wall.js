@@ -18,7 +18,7 @@ function Wall(pixi_context) {
 }
 
 Wall.prototype.init = function() {
-    this.graphics.beginFill(0xffffff, 1);
+    this.graphics.beginFill(0xFF7777, 1);
     this.graphics.lineStyle(1, 0xff0000, 1);
     this.graphics.drawRect(this.x - this.boundingWidth * 0.5, this.y - this.boundingHeight * 0.5, this.boundingWidth, this.boundingHeight);
     this.graphics.endFill();

@@ -5,7 +5,7 @@ function WoodHeap(pixi_context) {
 	Agent.call(this);
     this.graphics = new PIXI.Graphics();
     this.textCount = new PIXI.Text("0", {
-        font: "bold 8px Arial"
+        font: "bold 15px Arial"
     });
     this.textCount.anchor.x = 0.5;
     this.textCount.anchor.y = 0.5;
@@ -52,11 +52,11 @@ WoodHeap.prototype.takeWood = function() {
 };
 
 WoodHeap.prototype.draw = function(context) {
+    this.textCount.alpha = Math.min(1, this.woodCount/25.0);
     this.textCount.position.x = this.x;
     this.textCount.position.y = this.y;
     this.graphics.clear();
-    this.graphics.beginFill(0xffffff, 1);
-    this.graphics.lineStyle(1, 0x111111, 1);
+    this.graphics.beginFill(0xC04900, 1);
     this.graphics.drawCircle(0, 0, this.boundingRadius);
     this.graphics.endFill();
     this.graphics.position.x = this.x;

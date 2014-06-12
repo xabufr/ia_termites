@@ -123,7 +123,6 @@ function Termite(world_width, world_height, pixi_context) {
 }
 
 Termite.prototype.init = function() {
-    this.graphics.lineStyle(1, 0x000000, 1);
     this.graphics.beginFill(0xffffff, 1);
     this.graphics.drawCircle(0, 0, this.boundingRadius);
     this.graphics.endFill();
@@ -381,7 +380,7 @@ Termite.prototype.draw = function (context) {
         if (this.hasWood) {
             this.graphics.tint = 0xff0000;
         } else {
-            this.graphics.tint = 0xffffff;
+            this.graphics.tint = 0x000000;
         }
     }
 };
