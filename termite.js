@@ -155,9 +155,9 @@ Termite.prototype.perceive = function(){
 
 function updateHeapInfo(object, heapInfo) {
     if(!object.contains(heapInfo)) {
-        object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: currentDate()});
         object.version = currentDate();
     }
+    object.set(heapInfo.id, {x: heapInfo.x, y: heapInfo.y, count: heapInfo.woodCount, date: currentDate()});
 }
 
 Termite.prototype.act = function(conclusions){
