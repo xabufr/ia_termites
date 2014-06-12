@@ -23,8 +23,6 @@ function WoodHeap(pixi_context) {
 }
 
 WoodHeap.prototype.init = function() {
-    this.textCount.position.x = this.x;
-    this.textCount.position.y = this.y;
     this.updateWoodCount();
 };
 
@@ -54,6 +52,8 @@ WoodHeap.prototype.takeWood = function() {
 };
 
 WoodHeap.prototype.draw = function(context) {
+    this.textCount.position.x = this.x;
+    this.textCount.position.y = this.y;
     this.graphics.clear();
     this.graphics.beginFill(0xffffff, 1);
     this.graphics.lineStyle(1, 0x111111, 1);
