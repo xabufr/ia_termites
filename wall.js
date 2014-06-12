@@ -1,8 +1,12 @@
 Wall.prototype = new Agent();
 Wall.prototype.constructor = Wall;
 
-function Wall() {
+function Wall(pixi_context) {
 	Agent.call(this);
+
+    this.graphics = new PIXI.Graphics();
+    pixi_context.getStage().addChild(this.graphics);
+
 	this.typeId = "wall";
 	if(Math.random() < 0.5) {
 		this.boundingWidth = 100 + Math.random() * 400;
@@ -11,17 +15,13 @@ function Wall() {
 		this.boundingHeight = 100 + Math.random() * 400;
 		this.boundingWidth = 20;		
 	}
-
-//	this.collideTypes = ["wood_heap"];
-//	this.contactTypes = ["wood_heap"];
-
 }
 
+Wall.prototype.init = function() {
+    this.graphics.beginFill(0xffffff, 1);
+    this.graphics.lineStyle(1, 0xff0000, 1);
+    this.graphics.drawRect(this.x - this.boundingWidth * 0.5, this.y - this.boundingHeight * 0.5, this.boundingWidth, this.boundingHeight);
+    this.graphics.endFill();
+};
 Wall.prototype.draw = function(context) {
-	context.fillStyle = "rgba(0,0,0,0.5)";
-	context.strokeStyle = "#00FF00";
-	context.beginPath();
-	context.rect(this.x - this.boundingWidth/2, this.y - this.boundingHeight/2, this.boundingWidth, this.boundingHeight);
-	context.fill();
-	context.stroke();
 };
