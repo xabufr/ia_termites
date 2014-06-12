@@ -13,11 +13,11 @@ ExpertSystem.prototype.setFactValid = function(label, value) {
 };
 
 ExpertSystem.prototype.addRule = function(conclusionLabel, premiseLabels) {
-	conclusion = this.factBase.addFact(conclusionLabel);
+	var conclusion = this.factBase.addFact(conclusionLabel);
 	
 	var premises = [];
-	for(premiseIndex in premiseLabels) {
-		premise = this.factBase.addFact(premiseLabels[premiseIndex]);
+	for(var i = 0; i < premiseLabels.length; ++i) {
+		var premise = this.factBase.addFact(premiseLabels[i]);
 		premises.push(premise);
 	}
 

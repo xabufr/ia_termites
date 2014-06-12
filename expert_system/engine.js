@@ -3,30 +3,30 @@ function InferenceEngine() {
 }
 
 InferenceEngine.prototype.inferForward = function(factBase, ruleBase) {
-	var inferedFacts = [];
+	var inferredFacts = [];
 	var finished = false;
 	while(!finished) {
 		finished = true;
-		for(ruleIndex in ruleBase.rules) {
-			var rule = ruleBase.rules[ruleIndex];
+		for(var i=0;i< ruleBase.rules.length; ++i) {
+			var rule = ruleBase.rules[i];
 			if(!rule.goal.isValid() && rule.isValid()) {
 				rule.goal.value = true;
-				inferedFacts.push(rule.goal.label);
+				inferredFacts.push(rule.goal.label);
 
 				finished = false;
 			}
 		}
 	}
 
-	return inferedFacts;
+	return inferredFacts;
 };
 
 InferenceEngine.prototype.inferBackward = function(factBase, ruleBase) {
 	var primaryGoals = ruleBase.primaryGoals();
-	for(goalIndex in primaryGoals) {
-		var goalLabel = primaryGoals[goalIndex];
+	for(var i=0;i < primaryGoals.length;++i) {
+		var goalLabel = primaryGoals[i];
 		var initialPremises = ruleBase.initialPremises(goalLabel);
-		for(premiseIndex in initialPremises) {
+		for(var premiseIndex=0;premiseIndex < initialPremises.length; ++premiseIndex) {
 			var premiseLabel = initialPremises[premiseIndex];
 			if(!factBase.isFactValid(premiseLabel)) {
 				return premiseLabel;

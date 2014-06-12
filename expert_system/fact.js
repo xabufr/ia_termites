@@ -19,8 +19,8 @@ FactBase.prototype.addFact = function(label) {
 };
 
 FactBase.prototype.getFact = function(label) {
-	for(index in this.facts) {
-		var fact = this.facts[index];
+	for(var i=0; i < this.facts.length; ++i) {
+		var fact = this.facts[i];
 		if(fact.label == label) {
 			return fact;
 		}
@@ -49,8 +49,8 @@ FactBase.prototype.hasFact = function(label) {
 };
 
 FactBase.prototype.resetValues = function() {
-	for(index in this.facts) {
-		var fact = this.facts[index];
+	for(var i=0; i < this.facts.length; ++i) {
+		var fact = this.facts[i];
 		fact.value = false;
 	}
 };
