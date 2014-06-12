@@ -133,7 +133,16 @@ function PIXI_Context(canvas) {
 
     this.setStats = function(newstats) {
         stats = newstats;
-    }
+    };
+
+    var termiteSpeed = 150;
+    this.getVelocity = function() {
+        return termiteSpeed;
+    };
+
+    this.setVelocity = function(speed) {
+        termiteSpeed = speed;
+    };
 
     requestAnimFrame(update);
 }

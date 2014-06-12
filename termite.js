@@ -109,7 +109,6 @@ function Termite(world_width, world_height, pixi_context) {
 
     this.heapInfos = makeSet();
     this.walls = makeSet();
-    this.speed = 50 * 3;
     this.updateRandomDirection();
 
     this.nid = null;
@@ -315,7 +314,7 @@ function square(a) {
     return a * a;
 }
 Termite.prototype.moveToNext = function (dt) {
-    var distance = dt * this.speed * 0.001;
+    var distance = dt * pixi_context.getVelocity() * 0.001;
     var dest = this.gotoData.nextPoint;
     var distanceToFinalSquare = square(this.x - dest.x) + square(this.y - dest.y);
     var finished = false;

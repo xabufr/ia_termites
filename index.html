@@ -49,6 +49,9 @@
                 termites: parseInt(document.getElementById("termites").value)
             });
         }
+        function changeSpeed() {
+            pixi_context.setVelocity(parseInt(document.getElementById("velocity").value));
+        }
     </script>
     <style>
         * { margin: 0;
@@ -133,6 +136,10 @@
             <div class="input-group">
                 <span class="input-group-addon"><label for="heaps">Tas de bois</label></span>
                 <input type="number" id="heaps" min="1" max="50" class="form-control" value="6"/>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon"><label for="velocity">Vitesse termite</label></span>
+                <input type="number" id="velocity" min="1" max="500" class="form-control" value="150" onkeyup="changeSpeed();" onchange="changeSpeed();"/>
             </div>
         </div>
     </div>
