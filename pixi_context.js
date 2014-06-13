@@ -8,19 +8,8 @@ function PIXI_Context(canvas) {
     var debug = false;
     var debug_termite = null;
 
-    var textures = {};
-
     var play = true;
     var last_time = window.performance.now();
-    var frame_count;
-    var frame_count_start;
-    var fps = 0;
-
-    function resetFrameCount() {
-        frame_count = 0;
-        frame_count_start = window.performance.now();
-    }
-    resetFrameCount();
 
     this.getWorld = function() {
         return world;
@@ -91,12 +80,6 @@ function PIXI_Context(canvas) {
             stats.begin();
         }
         requestAnimFrame(update);
-        var time = window.performance.now() - frame_count_start;
-        if(time >= 500) {
-            fps = (frame_count / time) * 1000;
-            resetFrameCount();
-        }
-        ++frame_count;
         if(world === null) {
             return;
         }
@@ -112,19 +95,8 @@ function PIXI_Context(canvas) {
         }
     }
 
-    this.getTexture = function (image) {
-        if(image in textures) {
-            return textures[image];
-        }
-        return (textures[image] = PIXI.Texture.fromImage(image));
-    };
-
     this.getStage = function() {
         return stage;
-    };
-
-    this.getFPS = function() {
-        return fps;
     };
 
     this.toggleDebug = function() {
