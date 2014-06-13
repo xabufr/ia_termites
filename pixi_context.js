@@ -10,6 +10,7 @@ function PIXI_Context(canvas) {
 
     var play = true;
     var last_time = window.performance.now();
+    var createWoodHeapCompter = 20000 * Math.random() + 10000;
 
     this.getWorld = function() {
         return world;
@@ -74,8 +75,15 @@ function PIXI_Context(canvas) {
     }
 
     var stats = null;
+    var self = this;
 
     function update() {
+        if(createWoodHeapCompter <= 0)
+        {
+            var woodHeap =new WoodHeap(self);
+            world.addAgent(woodHeap);
+            createWoodHeapCompter = 20000 * Math.random() + 10000;
+        }
         if(stats != null) {
             stats.begin();
         }
@@ -84,6 +92,7 @@ function PIXI_Context(canvas) {
             return;
         }
         var dt = getDt();
+        createWoodHeapCompter -= dt;
         if(play) {
             world.update(dt);
         }
