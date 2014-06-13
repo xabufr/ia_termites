@@ -1,7 +1,7 @@
 Termite.prototype = new Agent();
 Termite.prototype.constructor = Termite;
 
-function makeSet() {
+function makeMap() {
     return {
         data: [],
         data_keys: [],
@@ -52,7 +52,7 @@ function makeSet() {
     };
 }
 
-function makeObjectSet(hashFunction) {
+function makeObjectBackedMap(hashFunction) {
     return {
         data: {},
         contains: function(key) {
@@ -87,6 +87,63 @@ function makeObjectSet(hashFunction) {
     };
 }
 
+function makeHashSet() {
+    return {
+        data: [],
+        add: function(value) {
+            if(this.contains(value)) {
+                this.data.push(value);
+                this.data.sort();
+            }
+        },
+        addAll: function(values) {
+            var added = false;
+            for(var i=0;i<values.length;++i) {
+                if(this.contains()) {
+                    var value = values[i];
+                    if(!this.contains(value)) {
+                        this.data.push(value);
+                        added = true;
+                    }
+                }
+            }
+            if(added) {
+                this.data.sort();
+            }
+            return added;
+        },
+        get: function(id) {
+            return this.data[id];
+        },
+        contains: function(value) {
+            return this.indexOf(value) !== -1;
+        },
+        indexOf: function(value) {
+            var data = this.data;
+            var start = 0;
+            var end = data.length-1;
+            while(start <= end) {
+                var middle = (start - end) * 0.5;
+                var currentValue = data[middle];
+                if(currentValue == value) {
+                    return middle;
+                } else if(currentValue < value) {
+                    start = middle + 1;
+                } else {
+                    end = middle - 1;
+                }
+            }
+            return -1;
+        },
+        size: function() {
+            return this.data.length;
+        },
+        getData: function() {
+            return this.data;
+        }
+    };
+}
+
 function currentDate() {
     return window.performance.now();
 }
@@ -107,8 +164,8 @@ function Termite(world_width, world_height, pixi_context) {
     this.contactTypes = ["wood_heap", "wall"];
 
 
-    this.heapInfos = makeSet();
-    this.walls = makeSet();
+    this.heapInfos = makeMap();
+    this.walls = makeMap();
     this.updateRandomDirection();
 
     this.nid = null;
@@ -157,11 +214,13 @@ Termite.prototype.perceive = function(){
 };
 
 function updateHeapInfo(object, heapInfo) {
-    if(this.nid != null && this.nid.id != heapInfo.id && this.nid.count + this.nid.termites.length <= heapInfo.woodCount) {
+    if(this.nid != null && this.nid.id != heapInfo.id && this.nid.count + this.nid.termites.size() <= heapInfo.woodCount) {
         if(heapInfo.woodCount > this.nid.count) {
+            var termites = makeHashSet();
+            termites.add(this.id);
             this.nid = {
                 id: heapInfo.id,
-                termites: [this.id],
+                termites: termites,
                 position: {
                     x: heapInfo.x,
                     y: heapInfo.y
@@ -434,16 +493,15 @@ function worldToGrid(x, y, grid) {
 function negociateNid(perceivedAgent) {
     function setTermiteNid(otherNid, myNid, myId) {
         myNid.id = otherNid.id;
-        myNid.termites = [myId];
+        myNid.termites = makeHashSet();
+        myNid.termites.add(myId);
         myNid.position = {
             x: otherNid.position.x,
             y: otherNid.position.y
         };
         myNid.count = otherNid.count;
         myNid.version = currentDate();
-        for (var idx = 0; idx < otherNid.termites.length; ++idx) {
-            myNid.termites.push(otherNid.termites[idx]);
-        }
+        myNid.termites.addAll(otherNid.termites.getData());
     }
 
     var otherNid = perceivedAgent.nid;
@@ -458,19 +516,12 @@ function negociateNid(perceivedAgent) {
 
 
     if (otherNid.id != this.nid.id) {
-        if (otherNid.termites.length + otherNid.count >= this.nid.termites.length + this.nid.count) {
+        if (otherNid.termites.size() + otherNid.count >= this.nid.termites.size() + this.nid.count) {
             setTermiteNid(otherNid, this.nid, this.id);
         }
     } else if (this.nid.version < otherNid.version) {
-        var otherTermites = perceivedAgent.nid.termites;
-        var added = false;
-        for (var idx = 0; idx < otherTermites.length; ++idx) {
-            var t_id = otherTermites[idx];
-            if (this.nid.termites.indexOf(t_id) === -1) {
-                this.nid.termites.push(t_id);
-                added = true;
-            }
-        }
+        var otherTermites = perceivedAgent.nid.termites.getData();
+        var added = this.nid.termites.addAll(otherTermites);
         if (added) {
             this.nid.version = currentDate();
         } else {
@@ -516,9 +567,11 @@ Termite.prototype.processPerception = function (perceivedAgent) {
     if (perceivedAgent.typeId == "wood_heap") {
         updateHeapInfo.call(this, this.heapInfos, perceivedAgent);
         if (this.nid === null) {
+            var termites = makeHashSet();
+            termites.add(this.id);
             this.nid = {
                 id: perceivedAgent.id,
-                termites: [this.id],
+                termites: termites,
                 position: {
                     x: perceivedAgent.x,
                     y: perceivedAgent.y
@@ -678,14 +731,14 @@ function findPath(from, to, grid, minCaseSize) {
     var nodesCache = [];
     var beginNode = makeNode(from.x, from.y);
 
-    var fScore = makeObjectSet(hashNode);
+    var fScore = makeObjectBackedMap(hashNode);
 
     function hashNode(o) {
         return o.x + "-" + o.y;
     }
 
-    var gScore = makeObjectSet(hashNode);
-    var cameFrom = makeObjectSet(hashNode);
+    var gScore = makeObjectBackedMap(hashNode);
+    var cameFrom = makeObjectBackedMap(hashNode);
 
     openSet.push(beginNode);
     gScore.set(beginNode, 0);
