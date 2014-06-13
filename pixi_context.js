@@ -82,6 +82,8 @@ function PIXI_Context(canvas) {
         {
             var woodHeap =new WoodHeap(self);
             world.addAgent(woodHeap);
+            woodHeap.moveTo(width * Math.random(),
+                    height * Math.random());
             createWoodHeapCompter = 20000 * Math.random() + 10000;
         }
         if(stats != null) {
