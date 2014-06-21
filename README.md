@@ -16,7 +16,7 @@ Démo: http://xabufr.github.io/ia_termites/
     - [Path finding A*](#path-finding-a)
     - [Répartition des tas](#répartition-des-tas)
 - [Comportement d’une termite](#comportement-dune-termite)
-- [Idées d’améliorations](#idées-damliorations)
+- [Idées d’améliorations](#idées-daméliorations)
 
 #Techniques mises en place
 ##Communication
