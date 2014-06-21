@@ -1,21 +1,11 @@
 TP Termites
 ===========
-Groupe:
-Alexandre RAMEL
-Thomas LOUBIOU
+Groupe
+-----------
+ * Alexandre RAMEL
+ * Thomas LOUBIOU
 Code source: https://github.com/xabufr/ia_termites
 Démo: http://xabufr.github.io/ia_termites/
-
-
-Techniques mises en place
-Communication
-Négociation du nid
-Système expert
-Exploration
-Path finding A*
-Répartition des tas
-Comportement d’une termite
-Idées d’améliorations
 
 #Techniques mises en place
 ##Communication
@@ -49,7 +39,7 @@ Il est possible de dessiner cette grille de recherche en passant en mode debug, 
 
 Le path finding utilisé trouve les chemin en diagonale lorsque c’est possible (c’est à dire qu’il n’y a pas de portion de mur entre deux cases mises en biais).
 
-¿ Nécessite un schémas ?
+*¿ Nécessite un schémas ?*
 
 La distance euclidienne est utilisée comme euristique de recherche.
 
@@ -60,7 +50,7 @@ Lorsqu’une termite connaît plusieurs tas, elle en choisi un de manière aléa
 La probabilité qu’une termite aille sur un tas est proportionnelle à la taille du tas. Ainsi tous les tas connus d’un groupe de termites voient leur taille décroître de manière identique.
 Cela évite d’avoir toutes les termites sur un seul petit tas quand il y a d’autres possibilités, et donc de se retrouver avec un déplacement massif inutile.
 
-##Comportement d’une termite
+#Comportement d’une termite
 Chaque termite suit ces règles, dictées par le système expert:
 Si elle ne connaît aucun tas de bois en dehors de son nid, et ne bouge pas, elle va à un point choisi aléatoirement,
 Si elle connaît un tas en dehors de son nid, qu’elle ne bouge pas et n’a pas de bois, alors elle va chercher du bois,
