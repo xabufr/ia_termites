@@ -79,4 +79,4 @@ Nous n’avons que peu d’idée pour améliorer l’IA de nos termites, et quel
 * Mettre en cache les résultats des recherches de chemin,
 * Ne plus passer par les centres des cases choisies par A* mais déterminer les positions intermédiaires les plus courtes,
 * Améliorer la communication entre termites (mettre en place plus de caches, recherche dichotomique, …),
-* Refaire le projet en C++ compilé en ASM.js pour avoir des performances proches du natif tout en restant web.
+* Refaire le projet en C++ compilé en [ASM.js](https://github.com/kripken/emscripten "ASM.js Compiler") pour avoir des performances proches du natif tout en restant web.
