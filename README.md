@@ -7,6 +7,17 @@ Groupe
 Code source: https://github.com/xabufr/ia_termites
 Démo: http://xabufr.github.io/ia_termites/
 
+#Table des matières
+- [Table des matières](#table-des-matires)
+- [Techniques mises en place](#techniques-mises-en-place)
+    - [Communication](#communication)
+    - [Négociation du nid](#ngociation-du-nid)
+    - [Exploration](#exploration)
+    - [Path finding A*](#path-finding-a)
+    - [Répartition des tas](#rpartition-des-tas)
+- [Comportement d’une termite](#comportement-dune-termite)
+- [Idées d’améliorations](#ides-damliorations)
+
 #Techniques mises en place
 ##Communication
 Les termites communiquent entre elles les éléments suivants:
